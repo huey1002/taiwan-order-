@@ -701,9 +701,9 @@ textarea.fi{resize:vertical;min-height:82px;line-height:1.6;}
       <div style="margin-bottom:10px;font-size:12px;color:var(--muted);">배송요금표 확인: <a href="https://www.taiwanin.kr/shippingfee" target="_blank" style="color:var(--navy);font-weight:700;">taiwanin.kr/shippingfee</a></div>
       <div class="err-msg" id="e_req" style="margin-bottom:8px;">요청사항을 선택해주세요. (없으면 '요청사항 없음' 체크)</div>
       <div class="chk-group">
-        <label class="chk-item"><input type="radio" name="ship" value="일반배송" checked> <span class="chk-label">일반배송 <span style="color:var(--muted);font-size:11px;">(영업일 7~14일)</span></span></label>
-        <label class="chk-item"><input type="radio" name="ship" value="특송배송"> <span class="chk-label">특송배송 <span style="color:var(--muted);font-size:11px;">(영업일 4~7일)</span></span></label>
-        <label class="chk-item"><input type="radio" name="ship" value="EMS배송"> <span class="chk-label">EMS 배송 <span style="color:var(--muted);font-size:11px;">(영업일 3~5일)</span></span></label>
+        <label class="chk-item"><input type="radio" name="ship" value="Standard Shipping" checked> <span class="chk-label">일반배송 <span style="color:var(--muted);font-size:11px;">(영업일 7~14일)</span></span></label>
+        <label class="chk-item"><input type="radio" name="ship" value="Express Shipping"> <span class="chk-label">특송배송 <span style="color:var(--muted);font-size:11px;">(영업일 4~7일)</span></span></label>
+        <label class="chk-item"><input type="radio" name="ship" value="EMS"> <span class="chk-label">EMS 배송 <span style="color:var(--muted);font-size:11px;">(영업일 3~5일)</span></span></label>
       </div>
     </div>
   </div>
@@ -965,6 +965,239 @@ textarea.fi{resize:vertical;min-height:82px;line-height:1.6;}
   </div>
 </div>
 
+
+
+<!-- 발송 전 확인 팝업 -->
+<div id="shipConfirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:900;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:18px;width:min(560px,95vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+
+    <!-- 헤더 (고정) -->
+    <div style="padding:22px 24px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:24px;">✈️</span>
+        <div>
+          <div style="font-size:16px;font-weight:800;color:var(--navy);">발송 전 최종 확인</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">아래 내용을 끝까지 읽은 후 체크하세요</div>
+        </div>
+      </div>
+      <!-- 스크롤 진행 바 -->
+      <div style="margin-top:12px;background:#eee;border-radius:99px;height:5px;overflow:hidden;">
+        <div id="sc_progressBar" style="height:100%;width:0%;background:var(--navy);border-radius:99px;transition:width 0.2s;"></div>
+      </div>
+      <div id="sc_progressTxt" style="font-size:11px;color:var(--muted);margin-top:5px;text-align:right;">↓ 아래로 스크롤하여 내용 확인</div>
+    </div>
+
+    <!-- 스크롤 본문 -->
+    <div id="sc_scrollBody" onscroll="onConfirmScroll()" style="overflow-y:auto;flex:1;padding:20px 24px;">
+
+      <div style="background:#f8f9ff;border-radius:12px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">📦 상품 확인 및 교환·취소</div>
+        <div style="font-size:12px;color:#555;line-height:2;">
+          · 첨부 사진을 통해 상품 일치 여부를 반드시 확인해 주세요.<br>
+          · <strong>미개봉 요청:</strong> 검수를 위해 개봉될 수 있으니, 원치 않으시면 사전에 말씀해 주세요.<br>
+          · <strong style="color:#c00;">교환/취소 불가:</strong> 국제배송 시작 후에는 절대 불가합니다.<br>
+          · 상품 이상·오배송은 반드시 <strong>출고 전에</strong> 알려주셔야 조치 가능합니다.<br>
+          · 발송 후 교환 시 왕복 국제배송비(기본 30,000원~)가 청구됩니다.
+        </div>
+      </div>
+
+      <div style="background:#f8f9ff;border-radius:12px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">📍 사진 및 요청사항</div>
+        <div style="font-size:12px;color:#555;line-height:2;">
+          · 추가 촬영·특정 항목 확인은 <strong>상품 도착 전 요청 필수</strong>이며 수수료 1,000원이 발생합니다.<br>
+          · 패킹·발송 단계에서는 배송 방식 변경이나 포장 보완 적용이 어려울 수 있습니다.
+        </div>
+      </div>
+
+      <div style="background:#fff8f0;border-left:4px solid #f5a623;border-radius:0 12px 12px 0;padding:16px 18px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:#c17d00;margin-bottom:10px;">🚚 배송 소요 및 파손 면책</div>
+        <div style="font-size:12px;color:#555;line-height:2;">
+          · 소요 기간: 영업일 기준 발송 후 약 10~20일 (현지 및 국제항공 상황에 따라 변동)<br>
+          · 국제 운송 특성상 파손 보상이 어렵습니다.<br>
+          · <strong style="color:#c00;">파손 면책 동의서 미제출 시 국제배송이 제한됩니다.</strong><br>
+          · <a href="https://forms.gle/wT6ePrUQRTZRdDX9A" target="_blank" style="color:#1a4fa0;font-weight:700;">📝 파손 면책 동의서 작성하기</a>
+        </div>
+      </div>
+
+      <div style="background:#f8f9ff;border-radius:12px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">💸 관부가세 안내</div>
+        <div style="font-size:12px;color:#555;line-height:2;">
+          · 상품 총 구매가 미화 150달러 이상 시 관부가세가 발생합니다.<br>
+          · 통관 시 관세사로부터 별도 안내가 진행되며, 해당 안내에 따라 납부하시면 통관 완료됩니다.
+        </div>
+      </div>
+
+      <div style="background:#f0fff4;border-radius:12px;padding:16px;margin-bottom:6px;">
+        <div style="font-size:12px;font-weight:700;color:#1a6b3a;margin-bottom:10px;">💳 입금 안내</div>
+        <div style="font-size:12px;color:#555;line-height:2;">
+          · 은행: <strong>토스뱅크</strong> &nbsp;/&nbsp; 계좌: <strong>1000-0080-2716</strong> &nbsp;/&nbsp; 예금주: <strong>여휘수</strong>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 체크리스트 (고정 하단) -->
+    <div id="sc_checkArea" style="padding:16px 24px;border-top:1px solid var(--border);flex-shrink:0;background:#fff;">
+      <div id="sc_scrollNotice" style="text-align:center;font-size:12px;color:var(--muted);padding:6px 0 10px;">
+        ⬇️ 내용을 끝까지 스크롤해야 체크가 활성화됩니다
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="sc_check1" disabled onchange="updateSendBtn()" style="margin-top:2px;width:16px;height:16px;accent-color:var(--navy);flex-shrink:0;">
+          <span style="font-size:12px;color:#333;">첨부 사진을 통해 상품 상태 및 일치 여부를 확인하였습니다.</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="sc_check2" disabled onchange="updateSendBtn()" style="margin-top:2px;width:16px;height:16px;accent-color:var(--navy);flex-shrink:0;">
+          <span style="font-size:12px;color:#333;">국제배송 시작 후 교환·취소가 불가함을 확인하였습니다.</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="sc_check3" disabled onchange="updateSendBtn()" style="margin-top:2px;width:16px;height:16px;accent-color:var(--navy);flex-shrink:0;">
+          <span style="font-size:12px;color:#333;">배송비를 마감일까지 입금하겠습니다.</span>
+        </label>
+        <div style="border-top:1px dashed var(--border);padding-top:10px;">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+            <input type="checkbox" id="sc_waiver" disabled onchange="updateSendBtn()" style="margin-top:2px;width:16px;height:16px;accent-color:var(--navy);flex-shrink:0;">
+            <span style="font-size:12px;color:#333;"><strong>파손 면책 동의서를 제출하였습니다.</strong><br><a href="https://forms.gle/wT6ePrUQRTZRdDX9A" target="_blank" style="font-size:11px;color:#1a4fa0;">📝 미제출이라면 여기서 먼저 작성하기 →</a></span>
+          </label>
+        </div>
+      </div>
+      <div id="sc_err" style="display:none;color:#c00;font-size:12px;text-align:center;margin:10px 0 0;">⚠️ 모든 항목을 체크해 주세요.</div>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button onclick="closeShipConfirmModal()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:#fff;font-size:13px;cursor:pointer;color:var(--muted);">취소</button>
+        <button id="sc_sendBtn" onclick="confirmAndSendShipping()" disabled
+          style="flex:2;padding:12px;border:none;border-radius:10px;background:#bbb;color:#fff;font-size:14px;font-weight:700;cursor:not-allowed;transition:background .3s;">
+          ✈️ 확인 완료 · 메일 발송
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 배송비 안내 발송 모달 -->
+<div id="shippingModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:800;overflow-y:auto;padding:20px;">
+  <div style="background:#fff;border-radius:18px;padding:28px;width:min(680px,95vw);margin:20px auto;position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
+      <div>
+        <div style="font-size:17px;font-weight:800;color:var(--navy);">✈️ 국제배송비 안내 발송</div>
+        <div style="font-size:11px;color:var(--muted);font-family:monospace;" id="sm_orderId"></div>
+      </div>
+      <button onclick="closeShippingModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <div style="background:var(--blue-soft);border-radius:10px;padding:14px 16px;margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:6px;">👤 수취인 정보 (자동)</div>
+      <div style="font-size:12px;color:#555;" id="sm_recvInfo"></div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:12px;font-weight:700;color:var(--navy);display:block;margin-bottom:5px;">📢 공지사항 <span style="font-weight:400;color:var(--muted);">(선택 - 있을 때만 메일 상단 표시)</span></label>
+      <textarea id="sm_notice" rows="3" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:13px;resize:vertical;box-sizing:border-box;" placeholder="예) 최근 배송 체계가 개편되었습니다..."></textarea>
+    </div>
+    <div style="background:var(--paper);border-radius:10px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px;">📅 출고 및 마감 일정 <span style="color:var(--red);font-weight:400;">*필수</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">일반/EMS 출고예정일</label><input id="sm_stdShipDate" type="text" placeholder="예) 3/10 (화)" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">일반/EMS 입금마감</label><input id="sm_stdDeadline" type="text" placeholder="예) 3/9 (월) 낮 12시" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">특송 출고예정일</label><input id="sm_expShipDate" type="text" placeholder="예) 3/10 (화)" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;"></div>
+        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">특송 입금마감</label><input id="sm_expDeadline" type="text" placeholder="예) 3/9 (월) 낮 12시" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;"></div>
+      </div>
+    </div>
+    <div style="background:var(--paper);border-radius:10px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px;">📐 규격 및 무게 <span style="color:var(--red);font-weight:400;">*필수</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">규격 (cm)</label>
+          <input id="sm_size" type="text" placeholder="예) 24*19*12" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;font-size:13px;box-sizing:border-box;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">무게 (kg)</label>
+          <div style="display:flex;gap:12px;align-items:center;height:38px;border:1.5px solid var(--border);border-radius:7px;padding:0 10px;background:#fff;box-sizing:border-box;margin-bottom:6px;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="radio" name="sm_weightType" value="실무게" checked> 실무게</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;white-space:nowrap;"><input type="radio" name="sm_weightType" value="부피무게"> 부피무게</label>
+          </div>
+          <input id="sm_weight" type="text" placeholder="예) 1" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;font-size:13px;box-sizing:border-box;">
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--paper);border-radius:10px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px;">📦 포장 및 서비스 항목 <span style="font-weight:400;color:var(--muted);">(해당 항목 체크)</span></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" class="sm_pack" id="sm_pack_unopened" value="미개봉 요청" data-fee="0" onchange="calcShippingTotal()" style="margin-top:2px;flex-shrink:0;">
+          <span><strong>미개봉 요청</strong> <span style="color:var(--muted);">(내부 개봉·정밀검수 없이 외부만 확인 / 오배송·상품 상태 문제 책임 어려움)</span></span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" class="sm_pack" value="정밀검수 3,000원" data-fee="3000" onchange="calcShippingTotal()" style="margin-top:2px;flex-shrink:0;">
+          <span>정밀검수 3,000원 <span style="color:var(--muted);">(추가 1,000원/건)</span></span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" class="sm_pack" value="포장보완 2,000원" data-fee="2000" onchange="calcShippingTotal()" style="margin-top:2px;flex-shrink:0;">
+          <span>포장보완 2,000원</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" class="sm_pack" value="재포장 2,000원" data-fee="2000" onchange="calcShippingTotal()" style="margin-top:2px;flex-shrink:0;">
+          <span>재포장 2,000원</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" class="sm_pack" value="재포장+포장보완 3,000원" data-fee="3000" onchange="calcShippingTotal()" style="margin-top:2px;flex-shrink:0;">
+          <span>재포장+포장보완 3,000원</span>
+        </label>
+        <div style="border-top:1px dashed var(--border);padding-top:10px;display:flex;flex-direction:column;gap:10px;">
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;" id="sm_pack_bundled_wrap">
+            <input type="checkbox" class="sm_pack" id="sm_pack_bundled" value="묶음배송" data-fee="0" onchange="calcShippingTotal()" style="margin-top:2px;flex-shrink:0;">
+            <span>묶음배송 <span style="color:var(--muted);">(3오더까지 무료, 추가 2,000원/건)</span></span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;" id="sm_pack_split_wrap">
+            <input type="checkbox" class="sm_pack" id="sm_pack_split" value="나눔배송" data-fee="0" onchange="calcShippingTotal()" style="margin-top:2px;flex-shrink:0;">
+            <span>나눔배송 <span style="color:var(--muted);">(분할 발송 시 규격에 맞는 박스 없을 경우 별도 박스 추가 = 재포장 적용)</span></span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:12px;cursor:pointer;">
+            <input type="checkbox" class="sm_pack" value="추가사진요청 1,000원/건" data-fee="1000" onchange="calcShippingTotal()" style="margin-top:2px;flex-shrink:0;">
+            <span><strong>추가사진요청 1,000원/건</strong> <span style="color:var(--muted);">(기본 사진 이외 추가 확인 필요 시 — 사전 요청 필수, 사후 요청 불가)</span></span>
+          </label>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);background:var(--blue-soft);border-radius:6px;padding:8px 10px;line-height:1.6;">
+        💡 정밀검수가 불가한 경우(개봉이 불가한 경우 등) 기본 검수로 적용됩니다.
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <label style="font-size:12px;font-weight:700;color:var(--navy);display:block;margin-bottom:5px;">⚠️ 특이사항 <span style="font-weight:400;color:var(--muted);">(선택)</span></label>
+      <textarea id="sm_specialNote" rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-size:13px;resize:vertical;box-sizing:border-box;" placeholder="예) 정밀검수 요청하셨지만 세부 확인이 어려워 기본 검수 위주로 진행되었습니다."></textarea>
+    </div>
+    <div style="background:var(--paper);border-radius:10px;padding:16px;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px;">💰 배송비 산정 <span style="color:var(--red);font-weight:400;">*필수</span></div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">국제배송비 (원) — 직접 입력</label>
+        <input id="sm_baseFee" type="number" placeholder="예) 19861" oninput="calcShippingTotal()"
+          style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;font-size:14px;box-sizing:border-box;">
+      </div>
+      <div style="border-top:1px dashed var(--border);padding-top:10px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">포장서비스 추가 금액 (위 체크 항목 자동 반영)</div>
+        <div id="sm_feeBreakdown" style="font-size:12px;color:#555;line-height:2;min-height:20px;"></div>
+      </div>
+      <div style="border-top:2px solid var(--navy);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:var(--navy);">총 국제배송비</span>
+        <span id="sm_totalFeeDisplay" style="font-size:18px;font-weight:900;color:var(--navy);">₩0</span>
+      </div>
+      <input type="hidden" id="sm_shippingFee">
+    </div>
+    <div style="margin-bottom:22px;">
+      <label style="font-size:12px;font-weight:700;color:var(--navy);display:block;margin-bottom:5px;">📷 사진 첨부 <span style="font-weight:400;color:var(--muted);">(최대 10장 · 장당 2MB 이하 권장)</span></label>
+      <div id="sm_photoArea" style="border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:var(--paper);" onclick="document.getElementById('sm_photoInput').click()">
+        <div style="font-size:28px;margin-bottom:6px;">📷</div>
+        <div style="font-size:13px;color:var(--muted);">클릭하여 사진 선택 (여러 장 가능)</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">JPG · PNG · HEIC 가능</div>
+      </div>
+      <input type="file" id="sm_photoInput" multiple accept="image/*" style="display:none" onchange="handlePhotoUpload(this)">
+      <div id="sm_photoList" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeShippingModal()" style="flex:1;padding:14px;border:1.5px solid var(--border);border-radius:10px;background:#fff;font-size:14px;cursor:pointer;color:var(--muted);">취소</button>
+      <button onclick="sendShippingNotice()" style="flex:2;padding:14px;border:none;border-radius:10px;background:var(--navy);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">✈️ 배송비 안내 메일 발송</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -991,6 +1224,8 @@ var gasLines=[
   '      wp.appendRow(["Order ID","Date","Buyer","#","Product Name","URL","Qty","Price","Option","Vendor","Inland NTD"]);',
   '    }',
   '    var d = JSON.parse(e.postData.contents);',
+  '    if(d.action==="shipping"){sendShippingEmail(d);return ContentService.createTextOutput(JSON.stringify({status:"ok"})).setMimeType(ContentService.MimeType.JSON);}',
+
   '    ws.appendRow([d.id,d.date,d.status,',
   '      d.buyerKo||"",d.buyerEn||"",',
   '      d.phone,d.email,d.biz||"",',
@@ -1035,6 +1270,9 @@ var gasLines=[
   '      prodRows += row;',
   '    });',
   '    var moreNote = total > showLimit ? "<p style=\"font-size:12px;color:#999;text-align:center;margin:8px 0 0;\">외 "+(total-showLimit)+"건 포함, 총 "+total+"건</p>" : "";',
+  '    var bizRow = d.biz ? "<tr><td style=\"font-size:12px;color:#999;padding:4px 0;\">사업자통관</td><td style=\"font-size:13px;color:#333;padding:4px 0;\">" + d.biz + "</td></tr>" : "";',
+  '    var receiptExtra = (d.receipt && d.receipt.indexOf("세금계산서") !== -1) ? " <strong style=\"color:#c00;\">(세액 별도)</strong>" : "";',
+  '    var receiptRow = d.receipt ? "<tr><td style=\"font-size:12px;color:#999;padding:4px 0;\">영수증/세금계산서</td><td style=\"font-size:13px;color:#333;padding:4px 0;\">" + d.receipt + receiptExtra + "</td></tr>" : "";',
   '    var html =',
   '      "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f0f2f5;font-family:Arial,sans-serif;\">"+',
   '      "<div style=\"max-width:600px;margin:30px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);\">"+',
@@ -1092,6 +1330,102 @@ var gasLines=[
   '  }',
   '}'
 ];
+
+// ── sendShippingEmail GAS 함수 (gasLines에 자동 추가됨) ──
+gasLines = gasLines.concat([
+  '',
+  'function sendShippingEmail(d) {',
+  '  try {',
+  '    var notice = "";',
+  '    if(d.notice && d.notice.trim()) {',
+  '      notice = "<div style=\"background:#FFF3CD;border-left:4px solid #FFC107;border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:24px;\">" +',
+  '        "<div style=\"font-size:12px;font-weight:700;color:#856404;margin-bottom:8px;\">📢 공지사항</div>" +',
+  '        "<p style=\"font-size:13px;color:#533f03;margin:0;white-space:pre-line;line-height:1.7;\">"+d.notice+"</p></div>";',
+  '    }',
+  '    var packText = (d.packagingItems && d.packagingItems.length) ? d.packagingItems.join(", ") : "";',
+  '    var specialRow = d.specialNote ? "<tr><td colspan=\"2\" style=\"font-size:12px;color:#c17d00;padding:8px 0;line-height:1.6;\">⚠️ "+d.specialNote+"</td></tr>" : "";',
+  '    var packRow = packText ? "<tr><td style=\"font-size:12px;color:#999;padding:4px 0;\">포장서비스</td><td style=\"font-size:13px;color:#333;padding:4px 0;\">"+packText+"</td></tr>" : "";',
+  '    var html =',
+  '      "<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f0f2f5;font-family:Arial,sans-serif;\">" +',
+  '      "<div style=\"max-width:640px;margin:30px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);\">" +',
+  '      "<div style=\"background:linear-gradient(135deg,#0d2b6b,#1a4fa0);padding:36px 32px;text-align:center;\">" +',
+  '      "<div style=\"font-size:13px;color:rgba(255,255,255,0.7);letter-spacing:2px;margin-bottom:8px;\">TAIWAN → KOREA</div>" +',
+  '      "<div style=\"font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px;\">대만iN 구매대행</div>" +',
+  '      "<div style=\"margin-top:12px;display:inline-block;background:rgba(255,255,255,0.15);border-radius:20px;padding:6px 18px;font-size:13px;color:#fff;\">✈️ 국제배송비 안내</div>" +',
+  '      "</div><div style=\"padding:32px;\">" +',
+  '      notice +',
+  '      "<p style=\"font-size:15px;color:#333;margin:0 0 20px;line-height:1.7;\">안녕하세요, <strong>"+d.buyerKo+"</strong>님!<br>구매하신 상품이 현지 당사에 도착하여 국제배송비를 안내드립니다.</p>" +',
+  '      "<div style=\"background:#E8F0FF;border-radius:12px;padding:18px 22px;margin-bottom:20px;\">" +',
+  '      "<div style=\"font-size:12px;font-weight:700;color:#1a3a6b;margin-bottom:10px;\">📢 국제배송 체계 개편 안내</div>" +',
+  '      "<div style=\"font-size:13px;color:#333;line-height:1.9;\">· 일반 / EMS 배송: 주 1회 출고 (차수별 별도 고지)<br>· 특송 배송: 매주 화요일, 금요일 출고<br>· 마감 시간 이후 입금 건은 다음 출고 일정으로 자동 이월됩니다.<br>· <a href=\"https://www.taiwanin.kr/boardPost/109752/10\" style=\"color:#1a4fa0;\">상세 확인 →</a></div></div>" +',
+  '      "<div style=\"background:#f8f9ff;border-radius:12px;padding:18px 22px;margin-bottom:20px;\">" +',
+  '      "<div style=\"font-size:12px;font-weight:700;color:#1a3a6b;margin-bottom:12px;\">📅 배송 방식별 출고 및 마감 일정</div>" +',
+  '      "<table style=\"width:100%;border-collapse:collapse;\">" +',
+  '      "<tr><td colspan=\"2\" style=\"font-size:13px;font-weight:700;color:#1a3a6b;padding:4px 0 6px;\">1️⃣ 일반 / EMS 배송</td></tr>" +',
+  '      "<tr><td style=\"font-size:12px;color:#999;padding:3px 0;width:110px;\">출고 예정일</td><td style=\"font-size:13px;color:#333;padding:3px 0;\">"+d.stdShipDate+"</td></tr>" +',
+  '      "<tr><td style=\"font-size:12px;color:#999;padding:3px 0;\">입금 마감</td><td style=\"font-size:13px;color:#c00;font-weight:700;padding:3px 0;\">"+d.stdDeadline+"</td></tr>" +',
+  '      "<tr><td colspan=\"2\" style=\"font-size:13px;font-weight:700;color:#1a3a6b;padding:12px 0 6px;\">2️⃣ 특송 배송</td></tr>" +',
+  '      "<tr><td style=\"font-size:12px;color:#999;padding:3px 0;\">출고 예정일</td><td style=\"font-size:13px;color:#333;padding:3px 0;\">"+d.expShipDate+"</td></tr>" +',
+  '      "<tr><td style=\"font-size:12px;color:#999;padding:3px 0;\">입금 마감</td><td style=\"font-size:13px;color:#c00;font-weight:700;padding:3px 0;\">"+d.expDeadline+"</td></tr>" +',
+  '      "</table><div style=\"margin-top:12px;font-size:11px;color:#c00;font-weight:700;\">⚠️ 마감 시간 이후 입금 건은 다음 회차로 자동 이월됩니다.</div></div>" +',
+  '      "<div style=\"background:#f8f9ff;border-radius:12px;padding:18px 22px;margin-bottom:20px;\">" +',
+  '      "<div style=\"font-size:12px;font-weight:700;color:#1a3a6b;margin-bottom:12px;\">👤 수취인 정보 및 요금</div>" +',
+  '      "<table style=\"width:100%;border-collapse:collapse;\">" +',
+  '      "<tr><td style=\"font-size:12px;color:#999;padding:4px 0;width:110px;\">수취인</td><td style=\"font-size:13px;font-weight:700;color:#1a3a6b;padding:4px 0;\">"+d.recvKo+"님</td></tr>" +',
+  '      "<tr><td style=\"font-size:12px;color:#999;padding:4px 0;\">규격</td><td style=\"font-size:13px;color:#333;padding:4px 0;\">"+d.size+" cm</td></tr>" +',
+  '      "<tr><td style=\"font-size:12px;color:#999;padding:4px 0;\">무게</td><td style=\"font-size:13px;color:#333;padding:4px 0;\">" + d.weight + "kg (" + d.weightType + ")</td></tr>" +',
+  '      bizRow + receiptRow +',
+
+  '      packRow + specialRow +',
+  '      "<tr style=\"border-top:2px solid #1a3a6b;\"><td style=\"font-size:13px;font-weight:700;color:#1a3a6b;padding:10px 0 4px;\">총 국제배송비</td><td style=\"font-size:16px;font-weight:900;color:#1a3a6b;padding:10px 0 4px;\">₩"+d.shippingFee+" ("+d.shipping+")</td></tr>" +',
+  '      "</table><p style=\"font-size:12px;color:#888;margin:10px 0 0;\">위 배송비를 마감일 전까지 입금해 주시면 확인 후 해당 일정에 맞춰 발송 진행하겠습니다.</p></div>" +',
+  '      "<div style=\"background:#FFF3CD;border-left:4px solid #FFC107;border-radius:0 12px 12px 0;padding:16px 20px;margin-bottom:20px;\">" +',
+  '      "<div style=\"font-size:12px;font-weight:700;color:#856404;margin-bottom:8px;\">⚠️ 이상 또는 변경 사항이 있으신 경우</div>" +',
+  '      "<div style=\"font-size:13px;color:#533f03;line-height:1.8;\">상품 이상, 오배송, 배송 방식 변경을 원하신다면 <strong>상품 도착 전까지 미리 말씀해 주셔야 합니다.</strong><br>도착 후 변경 요청 시 <strong>다음 회차로 자동 이월</strong>되오니 반드시 사전에 연락 주세요.</div></div>" +',
+  '      "<div style=\"background:#f8f9ff;border-radius:12px;padding:18px 22px;margin-bottom:20px;\">" +',
+  '      "<div style=\"font-size:12px;font-weight:700;color:#1a3a6b;margin-bottom:10px;\">📦 상품 확인 및 교환·취소 안내</div>" +',
+  '      "<div style=\"font-size:12px;color:#555;line-height:1.9;\">· 발송 전 첨부 사진을 통해 상품 일치 여부를 반드시 확인해 주세요.<br>· 미개봉 요청: 원치 않으시면 꼭 사전에 말씀해 주세요.<br>· <strong>교환/취소 불가:</strong> 국제배송 시작 후에는 교환 및 취소가 절대 불가합니다.<br>· 상품 이상이나 오배송은 반드시 <strong>출고 전에</strong> 알려주셔야 조치 가능합니다.<br>· 발송 후 교환 시 왕복 국제배송비(기본 30,000원~)가 청구됩니다.<br>· 추가 촬영 요청: 상품 도착 전 필수, 수수료 1,000원 발생.</div></div>" +',
+  '      "<div style=\"background:#fff8f0;border-left:4px solid #f5a623;border-radius:0 10px 10px 0;padding:16px 20px;margin-bottom:20px;\">" +',
+  '      "<div style=\"font-size:12px;font-weight:700;color:#c17d00;margin-bottom:8px;\">🚚 배송 및 파손 면책</div>" +',
+  '      "<div style=\"font-size:12px;color:#555;line-height:1.9;\">· 소요 기간: 영업일 기준 발송 후 약 10~20일 (현지 및 국제항공 상황에 따라 변동 가능)<br>· 국제 운송 특성상 파손 보상이 어렵습니다.<br>· <strong style=\"color:#c00;\">⚠️ 파손 면책 동의서 미제출 시 국제배송이 제한됩니다.</strong><br>· 동의서 작성 완료 후 발송 진행되오니 아직 미제출이라면 반드시 제출해 주세요.<br>· <a href=\"https://forms.gle/wT6ePrUQRTZRdDX9A\" style=\"color:#1a4fa0;font-weight:700;\">📝 파손 면책 동의서 작성하기</a></div></div>" +',
+  '      "<div style=\"background:#f8f9ff;border-radius:12px;padding:16px 20px;margin-bottom:20px;\">" +',
+  '      "<div style=\"font-size:12px;font-weight:700;color:#1a3a6b;margin-bottom:8px;\">💸 관부가세 안내</div>" +',
+  '      "<div style=\"font-size:12px;color:#555;line-height:1.8;\">· 관부가세는 상품 총 구매가가 미화 150달러 이상일 때 발생합니다.<br>· 통관 시 관세사로부터 별도 안내가 진행됩니다.</div></div>" +',
+  '      "<div style=\"background:#E8F5E9;border-radius:12px;padding:18px 22px;margin-bottom:24px;\">" +',
+  '      "<div style=\"font-size:12px;font-weight:700;color:#1a6b3a;margin-bottom:12px;\">💳 입금 안내</div>" +',
+  '      "<table style=\"width:100%;border-collapse:collapse;\">" +',
+  '      "<tr><td style=\"font-size:12px;color:#555;padding:3px 0;width:70px;\">은행</td><td style=\"font-size:13px;font-weight:700;color:#1a6b3a;\">토스뱅크</td></tr>" +',
+  '      "<tr><td style=\"font-size:12px;color:#555;padding:3px 0;\">계좌</td><td style=\"font-size:13px;font-weight:700;color:#1a6b3a;\">1000-0080-2716</td></tr>" +',
+  '      "<tr><td style=\"font-size:12px;color:#555;padding:3px 0;\">예금주</td><td style=\"font-size:13px;font-weight:700;color:#1a6b3a;\">여휘수</td></tr>" +',
+  '      "</table></div>" +',
+  '      "<div style=\"background:#1a3a6b;border-radius:12px;padding:18px 22px;margin-bottom:20px;\">" +',
+  '      "<div style=\"font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:12px;letter-spacing:1px;\">@ 수취인 정보 / Customer Info</div>" +',
+  '      "<table style=\"width:100%;border-collapse:collapse;\">" +',
+  '      "<tr><td style=\"font-size:11px;color:rgba(255,255,255,0.55);padding:3px 0;width:120px;\">Name (한/영)</td><td style=\"font-size:12px;color:#fff;padding:3px 0;\">"+d.recvKo+" / "+d.recvEn+"</td></tr>" +',
+  '      "<tr><td style=\"font-size:11px;color:rgba(255,255,255,0.55);padding:3px 0;\">Address (KOR)</td><td style=\"font-size:12px;color:#fff;padding:3px 0;\">"+d.addrKo+"</td></tr>" +',
+  '      "<tr><td style=\"font-size:11px;color:rgba(255,255,255,0.55);padding:3px 0;\">Address (ENG)</td><td style=\"font-size:12px;color:#fff;padding:3px 0;\">"+d.addrEn+"</td></tr>" +',
+  '      "<tr><td style=\"font-size:11px;color:rgba(255,255,255,0.55);padding:3px 0;\">Postal Code</td><td style=\"font-size:12px;color:#fff;padding:3px 0;\">"+d.zip+"</td></tr>" +',
+  '      "<tr><td style=\"font-size:11px;color:rgba(255,255,255,0.55);padding:3px 0;\">Phone</td><td style=\"font-size:12px;color:#fff;padding:3px 0;\">"+d.rphone+"</td></tr>" +',
+  '      "<tr><td style=\"font-size:11px;color:rgba(255,255,255,0.55);padding:3px 0;\">Customs Code</td><td style=\"font-size:12px;color:#fff;padding:3px 0;\">"+d.pccc+"</td></tr>" +',
+  '      "</table></div>" +',
+  '      "<div style=\"text-align:center;padding:20px 0;border-top:1px solid #eee;\">" +',
+  '      "<div style=\"font-size:12px;color:#999;margin-bottom:6px;\">문의사항이 있으시면 언제든지 연락주세요.</div>" +',
+  '      "<a href=\"mailto:taiwanin@naver.com\" style=\"font-size:13px;color:#1a3a6b;font-weight:700;text-decoration:none;\">📧 taiwanin@naver.com</a>" +',
+  '      "<div style=\"margin-top:16px;font-size:12px;color:#bbb;\">감사합니다. 대만iN 드림 🇹🇼</div>" +',
+  '      "</div></div></div></body></html>";',
+  '    var att = [];',
+  '    (d.photos || []).forEach(function(p, i) {',
+  '      try {',
+  '        att.push(Utilities.newBlob(Utilities.base64Decode(p.data), p.mimeType, p.name || ("사진_"+(i+1)+".jpg")));',
+  '      } catch(pe) { Logger.log("Photo err: "+pe); }',
+  '    });',
+  '    GmailApp.sendEmail(d.email, "[대만iN] 국제배송비 안내", "", {',
+  '      htmlBody: html, name: "대만iN", replyTo: "taiwanin@naver.com",',
+  '      attachments: att.length ? att : undefined',
+  '    });',
+  '  } catch(err) { Logger.log("Shipping email error: " + err.toString()); }',
+  '}'
+]);
 document.getElementById('gasCodeBox').textContent=gasLines.join('\n');
 
 function updateSheetsStatus(){
@@ -1590,7 +1924,15 @@ function renderTable(){
     idBtn.style.cssText='background:none;border:none;color:var(--navy);font-weight:700;font-size:11px;cursor:pointer;font-family:monospace;text-decoration:underline;';
     idBtn.textContent=o.id;
     idBtn.onclick=(function(ord){return function(){showOrderDetail(ord);};})(o);
-    tr.appendChild(td(idBtn));
+    var shipBtn=document.createElement('button');
+    shipBtn.innerHTML='✈️ <span style="font-size:11px;">배송안내</span>';
+    shipBtn.title='배송비 안내 발송';
+    shipBtn.style.cssText='background:var(--navy);color:#fff;border:none;border-radius:5px;padding:2px 6px;font-size:11px;cursor:pointer;margin-left:4px;';
+    shipBtn.onclick=(function(ord){return function(e){e.stopPropagation();openShippingModal(ord);};})(o);
+    var idCell=document.createElement('td');
+    idCell.style.cssText='white-space:nowrap;';
+    idCell.appendChild(idBtn);idCell.appendChild(shipBtn);
+    tr.appendChild(idCell);
     tr.appendChild(td(o.date));
     // 상태 드롭다운
     var sel=document.createElement('select');sel.className='ssel';
@@ -2208,6 +2550,255 @@ function syncEnDetail(){
 function autoRomanize(koId, enId){
   var koVal = document.getElementById(koId).value;
   document.getElementById(enId).value = korToPassport(koVal);
+}
+
+
+// ── 배송비 안내 발송 ──
+var _shippingOrder = null;
+var _shippingPhotos = [];
+
+function openShippingModal(o) {
+  _shippingOrder = o;
+  _shippingPhotos = [];
+  document.getElementById('sm_orderId').textContent = o.id + ' · ' + o.email;
+  var receiptLine = '';
+  if(o.receipt && o.receipt.trim()) {
+    var rText = o.receipt;
+    if(rText.indexOf('세금계산서') !== -1) rText += ' <span style="color:#c00;font-weight:700;">(세액 별도)</span>';
+    receiptLine = '<br>🧾 ' + rText;
+  }
+  var bizLine = (o.biz && o.biz.trim()) ? '<br>🏢 사업자통관: ' + o.biz : '';
+  document.getElementById('sm_recvInfo').innerHTML =
+    '<strong>' + (o.recvKo||o.recv) + '</strong> / ' + (o.recvEn||'') + '<br>' +
+    '<span style="font-size:11px;color:#555;">🏠 ' + (o.addrKo||'') + ' [' + (o.zip||'') + ']</span><br>' +
+    '<span style="font-size:11px;color:#888;">🌐 ' + (o.addrEn||'') + '</span><br>' +
+    '📱 ' + (o.rphone||'') + ' &nbsp;|&nbsp; ✈️ ' + (o.shipping||'') +
+    bizLine + receiptLine;
+  ['sm_notice','sm_stdShipDate','sm_stdDeadline','sm_expShipDate','sm_expDeadline','sm_size','sm_weight','sm_specialNote','sm_shippingFee','sm_baseFee'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  document.querySelectorAll('.sm_pack').forEach(function(c){ c.checked = false; });
+  // 주문에서 묶음/나눔/미개봉 요청 시 자동 체크
+  var reqStr = o.requests || '';
+  if(reqStr.indexOf('묶음') !== -1 || reqStr.indexOf('Combined') !== -1) {
+    var cbB = document.getElementById('sm_pack_bundled');
+    if(cbB) cbB.checked = true;
+  }
+  if(reqStr.indexOf('나눔') !== -1 || reqStr.indexOf('Split') !== -1) {
+    var cbS = document.getElementById('sm_pack_split');
+    if(cbS) cbS.checked = true;
+  }
+  if(reqStr.indexOf('미개봉') !== -1 || reqStr.indexOf('Unopened') !== -1) {
+    var cbU = document.getElementById('sm_pack_unopened');
+    if(cbU) cbU.checked = true;
+  }
+  document.getElementById('sm_photoList').innerHTML = '';
+  document.getElementById('shippingModal').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function closeShippingModal() {
+  document.getElementById('shippingModal').style.display = 'none';
+  _shippingOrder = null;
+  _shippingPhotos = [];
+}
+
+function handlePhotoUpload(input) {
+  var files = Array.from(input.files);
+  if(_shippingPhotos.length + files.length > 10) {
+    showToast('⚠️ 사진은 최대 10장까지 첨부 가능합니다.');
+    files = files.slice(0, 10 - _shippingPhotos.length);
+  }
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl = e.target.result;
+      var base64 = dataUrl.split(',')[1];
+      _shippingPhotos.push({ data: base64, mimeType: file.type, name: file.name });
+      renderShippingPhotoList();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function renderShippingPhotoList() {
+  var list = document.getElementById('sm_photoList');
+  list.innerHTML = '';
+  _shippingPhotos.forEach(function(p, i) {
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;display:inline-block;';
+    var img = document.createElement('img');
+    img.src = 'data:' + p.mimeType + ';base64,' + p.data;
+    img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:8px;border:2px solid var(--border);display:block;';
+    var del = document.createElement('button');
+    del.textContent = '✕';
+    del.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#e53935;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;padding:0;';
+    del.onclick = (function(idx){ return function(){ _shippingPhotos.splice(idx,1); renderShippingPhotoList(); }; })(i);
+    var label = document.createElement('div');
+    label.style.cssText = 'font-size:9px;color:var(--muted);text-align:center;margin-top:2px;max-width:72px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;';
+    label.textContent = p.name;
+    wrap.appendChild(img); wrap.appendChild(del); wrap.appendChild(label);
+    list.appendChild(wrap);
+  });
+}
+
+function sendShippingNotice() {
+  if(!_shippingOrder) return;
+  var required = [
+    ['sm_stdShipDate','일반/EMS 출고예정일'],
+    ['sm_stdDeadline','일반/EMS 입금마감'],
+    ['sm_expShipDate','특송 출고예정일'],
+    ['sm_expDeadline','특송 입금마감'],
+    ['sm_size','규격'],
+    ['sm_weight','무게'],
+    ['sm_shippingFee','총 배송비']
+  ];
+  for(var ri=0;ri<required.length;ri++){
+    if(!document.getElementById(required[ri][0]).value.trim()){
+      showToast('⚠️ '+required[ri][1]+'을 입력해주세요.');
+      document.getElementById(required[ri][0]).focus();
+      return;
+    }
+  }
+  openShipConfirmModal();
+}
+
+function openShipConfirmModal() {
+  ['sc_check1','sc_check2','sc_check3','sc_waiver'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.checked = false;
+    el.disabled = true;
+  });
+  document.getElementById('sc_err').style.display = 'none';
+  document.getElementById('sc_progressBar').style.width = '0%';
+  document.getElementById('sc_progressTxt').textContent = '↓ 아래로 스크롤하여 내용 확인';
+  document.getElementById('sc_scrollNotice').style.display = 'block';
+  var sendBtn = document.getElementById('sc_sendBtn');
+  sendBtn.disabled = true;
+  sendBtn.style.background = '#bbb';
+  sendBtn.style.cursor = 'not-allowed';
+  // 모달 display 설정 (flex로)
+  var modal = document.getElementById('shipConfirmModal');
+  modal.style.display = 'flex';
+  // 스크롤 초기화
+  setTimeout(function(){
+    var body = document.getElementById('sc_scrollBody');
+    if(body) body.scrollTop = 0;
+  }, 50);
+}
+
+function onConfirmScroll() {
+  var el = document.getElementById('sc_scrollBody');
+  if(!el) return;
+  var scrolled = el.scrollTop;
+  var total = el.scrollHeight - el.clientHeight;
+  var pct = total > 0 ? Math.min(100, Math.round(scrolled / total * 100)) : 100;
+  document.getElementById('sc_progressBar').style.width = pct + '%';
+  if(pct >= 95) {
+    // 끝까지 읽음 → 체크 활성화
+    ['sc_check1','sc_check2','sc_check3','sc_waiver'].forEach(function(id){
+      document.getElementById(id).disabled = false;
+    });
+    document.getElementById('sc_scrollNotice').style.display = 'none';
+    document.getElementById('sc_progressTxt').textContent = '✅ 내용 확인 완료 — 아래 항목을 체크해 주세요';
+    document.getElementById('sc_progressTxt').style.color = '#1a6b3a';
+    document.getElementById('sc_progressBar').style.background = '#1a6b3a';
+  } else {
+    document.getElementById('sc_progressTxt').textContent = pct + '% 확인 중... ↓ 계속 스크롤하세요';
+  }
+}
+
+function updateSendBtn() {
+  var allChecked = ['sc_check1','sc_check2','sc_check3','sc_waiver'].every(function(id){
+    return document.getElementById(id).checked;
+  });
+  var btn = document.getElementById('sc_sendBtn');
+  btn.disabled = !allChecked;
+  btn.style.background = allChecked ? 'var(--navy)' : '#bbb';
+  btn.style.cursor = allChecked ? 'pointer' : 'not-allowed';
+}
+
+function closeShipConfirmModal() {
+  document.getElementById('shipConfirmModal').style.display = 'none';
+}
+
+function confirmAndSendShipping() {
+  var allChecked = ['sc_check1','sc_check2','sc_check3','sc_waiver'].every(function(id){
+    return document.getElementById(id).checked;
+  });
+  if(!allChecked) {
+    document.getElementById('sc_err').style.display = 'block';
+    return;
+  }
+  closeShipConfirmModal();
+  doSendShippingNotice();
+}
+
+function doSendShippingNotice() {
+  if(!_shippingOrder) return;
+  var o = _shippingOrder;
+  if(!sheetsUrl){ showToast('⚠️ GAS URL이 설정되지 않았습니다.'); return; }
+  var packItems = [];
+  document.querySelectorAll('.sm_pack:checked').forEach(function(c){ packItems.push(c.value); });
+  var payload = {
+    action: 'shipping',
+    orderId: o.id,
+    email: o.email,
+    buyerKo: o.buyerKo || o.buyer || '',
+    recvKo: o.recvKo || o.recv || '',
+    recvEn: o.recvEn || '',
+    addrKo: o.addrKo || '',
+    addrEn: o.addrEn || '',
+    zip: o.zip || '',
+    rphone: o.rphone || '',
+    pccc: o.pccc || '',
+    receipt: o.receipt || '',
+    biz: o.biz || '',
+    shipping: o.shipping || '',
+    notice: document.getElementById('sm_notice').value.trim(),
+    stdShipDate: document.getElementById('sm_stdShipDate').value.trim(),
+    stdDeadline: document.getElementById('sm_stdDeadline').value.trim(),
+    expShipDate: document.getElementById('sm_expShipDate').value.trim(),
+    expDeadline: document.getElementById('sm_expDeadline').value.trim(),
+    size: document.getElementById('sm_size').value.trim(),
+    weight: document.getElementById('sm_weight').value.trim(),
+    weightType: document.querySelector('input[name="sm_weightType"]:checked') ? document.querySelector('input[name="sm_weightType"]:checked').value : '실무게',
+    packagingItems: packItems,
+    specialNote: document.getElementById('sm_specialNote').value.trim(),
+    shippingFee: document.getElementById('sm_shippingFee').value.trim(),
+    photos: _shippingPhotos
+  };
+  document.getElementById('loadingOverlay').classList.add('show');
+  fetch(sheetsUrl, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
+    .then(function() {
+      document.getElementById('loadingOverlay').classList.remove('show');
+      closeShippingModal();
+      showToast('✈️ 배송비 안내 메일을 발송했습니다!');
+    })
+    .catch(function() {
+      document.getElementById('loadingOverlay').classList.remove('show');
+      showToast('❌ 발송 중 오류가 발생했습니다.');
+    });
+}
+
+function calcShippingTotal() {
+  var base = parseInt(document.getElementById('sm_baseFee').value.replace(/[^0-9]/g,'')) || 0;
+  var packFee = 0;
+  var breakdown = [];
+  document.querySelectorAll('.sm_pack:checked').forEach(function(c) {
+    var fee = parseInt(c.getAttribute('data-fee')) || 0;
+    packFee += fee;
+    if(fee > 0) breakdown.push(c.value + ' (+₩' + fee.toLocaleString() + ')');
+  });
+  var total = base + packFee;
+  var bd = document.getElementById('sm_feeBreakdown');
+  var disp = document.getElementById('sm_totalFeeDisplay');
+  var hidden = document.getElementById('sm_shippingFee');
+  if(bd) bd.innerHTML = base > 0 ? '국제배송비 ₩' + base.toLocaleString() + (breakdown.length ? '<br>' + breakdown.join('<br>') : '') : '<span style="color:var(--muted);">배송비를 입력하면 자동 계산됩니다.</span>';
+  if(disp) disp.textContent = '₩' + total.toLocaleString();
+  if(disp) disp.style.color = total > 0 ? 'var(--navy)' : 'var(--muted)';
+  if(hidden) hidden.value = total > 0 ? total.toLocaleString() : '';
 }
 
 addRow();addProd();calcAll();
