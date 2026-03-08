@@ -968,8 +968,8 @@ textarea.fi{resize:vertical;min-height:82px;line-height:1.6;}
 
 
 <!-- 발송 전 확인 팝업 -->
-<div id="shipConfirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:900;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#fff;border-radius:18px;width:min(560px,95vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.3);">
+<div id="shipConfirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:900;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;">
+  <div style="background:#fff;border-radius:18px;width:min(560px,95vw);height:min(680px,90vh);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.3);">
 
     <!-- 헤더 (고정) -->
     <div style="padding:22px 24px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
@@ -988,7 +988,7 @@ textarea.fi{resize:vertical;min-height:82px;line-height:1.6;}
     </div>
 
     <!-- 스크롤 본문 -->
-    <div id="sc_scrollBody" onscroll="onConfirmScroll()" style="overflow-y:auto;flex:1;padding:20px 24px;">
+    <div id="sc_scrollBody" onscroll="onConfirmScroll()" style="overflow-y:auto;flex:1;padding:20px 24px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;">
 
       <div style="background:#f8f9ff;border-radius:12px;padding:16px;margin-bottom:14px;">
         <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px;">📦 상품 확인 및 교환·취소</div>
