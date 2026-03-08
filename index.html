@@ -1094,11 +1094,35 @@ textarea.fi{resize:vertical;min-height:82px;line-height:1.6;}
     </div>
     <div style="background:var(--paper);border-radius:10px;padding:16px;margin-bottom:14px;">
       <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px;">📅 출고 및 마감 일정 <span style="color:var(--red);font-weight:400;">*필수</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">일반/EMS 출고예정일</label><input id="sm_stdShipDate" type="text" placeholder="예) 3/10 (화)" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;"></div>
-        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">일반/EMS 입금마감</label><input id="sm_stdDeadline" type="text" placeholder="예) 3/9 (월) 낮 12시" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;"></div>
-        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">특송 출고예정일</label><input id="sm_expShipDate" type="text" placeholder="예) 3/10 (화)" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;"></div>
-        <div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">특송 입금마감</label><input id="sm_expDeadline" type="text" placeholder="예) 3/9 (월) 낮 12시" style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:6px;">일반/EMS 출고예정일</div>
+          <input id="sm_stdShipDate_picker" type="date" onchange="onDatePick('sm_stdShipDate','sm_stdShipDate_picker',false)"
+            style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;cursor:pointer;">
+          <div id="sm_stdShipDate_display" style="font-size:12px;font-weight:600;color:var(--navy);margin-top:5px;min-height:18px;"></div>
+          <input type="hidden" id="sm_stdShipDate">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:6px;">일반/EMS 입금마감 <span style="color:var(--red);">⏰ 낮 12시</span></div>
+          <input id="sm_stdDeadline_picker" type="date" onchange="onDatePick('sm_stdDeadline','sm_stdDeadline_picker',true)"
+            style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;cursor:pointer;">
+          <div id="sm_stdDeadline_display" style="font-size:12px;font-weight:600;color:var(--navy);margin-top:5px;min-height:18px;"></div>
+          <input type="hidden" id="sm_stdDeadline">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:6px;">특송 출고예정일</div>
+          <input id="sm_expShipDate_picker" type="date" onchange="onDatePick('sm_expShipDate','sm_expShipDate_picker',false)"
+            style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;cursor:pointer;">
+          <div id="sm_expShipDate_display" style="font-size:12px;font-weight:600;color:var(--navy);margin-top:5px;min-height:18px;"></div>
+          <input type="hidden" id="sm_expShipDate">
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:6px;">특송 입금마감 <span style="color:var(--red);">⏰ 낮 12시</span></div>
+          <input id="sm_expDeadline_picker" type="date" onchange="onDatePick('sm_expDeadline','sm_expDeadline_picker',true)"
+            style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:13px;box-sizing:border-box;cursor:pointer;">
+          <div id="sm_expDeadline_display" style="font-size:12px;font-weight:600;color:var(--navy);margin-top:5px;min-height:18px;"></div>
+          <input type="hidden" id="sm_expDeadline">
+        </div>
       </div>
     </div>
     <div style="background:var(--paper);border-radius:10px;padding:16px;margin-bottom:14px;">
@@ -1194,6 +1218,27 @@ textarea.fi{resize:vertical;min-height:82px;line-height:1.6;}
     <div style="display:flex;gap:10px;">
       <button onclick="closeShippingModal()" style="flex:1;padding:14px;border:1.5px solid var(--border);border-radius:10px;background:#fff;font-size:14px;cursor:pointer;color:var(--muted);">취소</button>
       <button onclick="sendShippingNotice()" style="flex:2;padding:14px;border:none;border-radius:10px;background:var(--navy);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">✈️ 배송비 안내 메일 발송</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 상태 변경 이메일 확인 팝업 -->
+<div id="statusEmailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:950;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:min(440px,92vw);box-shadow:0 8px 40px rgba(0,0,0,.25);">
+    <div style="text-align:center;margin-bottom:18px;">
+      <div id="seModal_icon" style="font-size:36px;margin-bottom:8px;"></div>
+      <div id="seModal_title" style="font-size:16px;font-weight:800;color:var(--navy);"></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">고객에게 상태 변경 이메일을 발송하시겠습니까?</div>
+    </div>
+    <div style="background:#f8f9ff;border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:12px;color:#555;line-height:1.8;">
+      <div><strong>수신:</strong> <span id="seModal_email" style="color:var(--navy);"></span></div>
+      <div><strong>고객명:</strong> <span id="seModal_name"></span></div>
+      <div><strong>접수번호:</strong> <span id="seModal_id" style="font-family:monospace;"></span></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeStatusEmailModal()" style="flex:1;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:#fff;font-size:13px;cursor:pointer;color:var(--muted);">건너뛰기</button>
+      <button onclick="sendStatusEmail()" style="flex:2;padding:12px;border:none;border-radius:10px;background:var(--navy);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">📧 이메일 발송</button>
     </div>
   </div>
 </div>
@@ -1925,9 +1970,9 @@ function renderTable(){
     idBtn.textContent=o.id;
     idBtn.onclick=(function(ord){return function(){showOrderDetail(ord);};})(o);
     var shipBtn=document.createElement('button');
-    shipBtn.innerHTML='✈️ <span style="font-size:11px;">배송안내</span>';
+    shipBtn.innerHTML='✈️ 배송안내';
     shipBtn.title='배송비 안내 발송';
-    shipBtn.style.cssText='background:var(--navy);color:#fff;border:none;border-radius:5px;padding:2px 6px;font-size:11px;cursor:pointer;margin-left:4px;';
+    shipBtn.style.cssText='background:var(--navy);color:#fff;border:none;border-radius:7px;padding:4px 9px;font-size:12px;cursor:pointer;margin-left:4px;white-space:nowrap;';
     shipBtn.onclick=(function(ord){return function(e){e.stopPropagation();openShippingModal(ord);};})(o);
     var idCell=document.createElement('td');
     idCell.style.cssText='white-space:nowrap;';
@@ -1940,11 +1985,17 @@ function renderTable(){
     sel.style.cssText='background:'+sm.bg+';color:'+sm.color+';border-color:'+sm.color+';font-weight:700;';
     OPTS.forEach(function(s){var op=document.createElement('option');op.value=s;op.textContent=STATUS_MAP[s].ko;if(s===o.status)op.selected=true;sel.appendChild(op);});
     sel.addEventListener('change',function(){
-      orders[realIdx].status=this.value;
+      var newStatus = this.value;
+      orders[realIdx].status = newStatus;
       localStorage.setItem(OKEY,JSON.stringify(orders));
-      var nsm=STATUS_MAP[this.value]||{bg:'#eee',color:'#333'};
+      var nsm=STATUS_MAP[newStatus]||{bg:'#eee',color:'#333'};
       this.style.cssText='background:'+nsm.bg+';color:'+nsm.color+';border-color:'+nsm.color+';font-weight:700;';
       updateSummary();
+      // 이메일 발송 가능한 상태면 확인 팝업
+      var emailStatuses = ['Payment Confirmed','Purchased','Delivered','Cancelled'];
+      if(emailStatuses.indexOf(newStatus) !== -1 && orders[realIdx].email) {
+        showStatusEmailConfirm(orders[realIdx], newStatus);
+      }
     });
     tr.appendChild(td(sel));
     tr.appendChild(td('<strong>'+o.buyer+'</strong>'));
@@ -2574,8 +2625,17 @@ function openShippingModal(o) {
     '<span style="font-size:11px;color:#888;">🌐 ' + (o.addrEn||'') + '</span><br>' +
     '📱 ' + (o.rphone||'') + ' &nbsp;|&nbsp; ✈️ ' + (o.shipping||'') +
     bizLine + receiptLine;
-  ['sm_notice','sm_stdShipDate','sm_stdDeadline','sm_expShipDate','sm_expDeadline','sm_size','sm_weight','sm_specialNote','sm_shippingFee','sm_baseFee'].forEach(function(id){
+  ['sm_notice','sm_size','sm_weight','sm_specialNote','sm_shippingFee','sm_baseFee'].forEach(function(id){
     document.getElementById(id).value = '';
+  });
+  // 날짜 피커 초기화
+  ['sm_stdShipDate','sm_stdDeadline','sm_expShipDate','sm_expDeadline'].forEach(function(id){
+    var picker = document.getElementById(id+'_picker');
+    var hidden = document.getElementById(id);
+    var display = document.getElementById(id+'_display');
+    if(picker) { picker.value = ''; picker.min = new Date().toISOString().split('T')[0]; }
+    if(hidden) hidden.value = '';
+    if(display) display.innerHTML = '';
   });
   document.querySelectorAll('.sm_pack').forEach(function(c){ c.checked = false; });
   // 주문에서 묶음/나눔/미개봉 요청 시 자동 체크
@@ -2779,6 +2839,129 @@ function doSendShippingNotice() {
     .catch(function() {
       document.getElementById('loadingOverlay').classList.remove('show');
       showToast('❌ 발송 중 오류가 발생했습니다.');
+    });
+}
+
+var SM_DAYS = ['일','월','화','수','목','금','토'];
+
+function onDatePick(hiddenId, pickerId, isDeadline) {
+  var picker = document.getElementById(pickerId);
+  var hidden = document.getElementById(hiddenId);
+  var display = document.getElementById(hiddenId+'_display');
+  if(!picker.value) {
+    if(hidden) hidden.value='';
+    if(display) display.innerHTML='';
+    return;
+  }
+  var d = new Date(picker.value + 'T00:00:00');
+  var m = d.getMonth()+1;
+  var day = d.getDate();
+  var dow = SM_DAYS[d.getDay()];
+  if(isDeadline) {
+    if(hidden) hidden.value = m+'/'+day+' ('+dow+') 낮 12시';
+    if(display) display.innerHTML = m+'/'+day+' ('+dow+') <strong style="color:#c00;">낮 12시</strong>';
+  } else {
+    if(hidden) hidden.value = m+'/'+day+' ('+dow+')';
+    if(display) display.innerHTML = m+'/'+day+' ('+dow+')';
+  }
+}
+
+var _statusEmailOrder = null;
+var _statusEmailStatus = null;
+
+var STATUS_EMAIL_MAP = {
+  'Payment Confirmed': {
+    icon: '💳',
+    title: '결제 확인 안내',
+    subject: '[대만iN] 결제가 확인되었습니다',
+    body: function(o) {
+      return '안녕하세요, <strong>'+o.buyerKo+'</strong>님!<br><br>'
+        + '주문하신 상품의 <strong style="color:#1a3a6b;">결제가 확인</strong>되었습니다.<br>'
+        + '확인 즉시 대만 현지에서 구매 진행을 시작하겠습니다.<br><br>'
+        + '진행 상황은 순차적으로 안내드리겠습니다. 감사합니다 😊';
+    }
+  },
+  'Purchased': {
+    icon: '✅',
+    title: '구매 완료 안내',
+    subject: '[대만iN] 상품 구매가 완료되었습니다',
+    body: function(o) {
+      return '안녕하세요, <strong>'+o.buyerKo+'</strong>님!<br><br>'
+        + '주문하신 상품의 <strong style="color:#1a6b3a;">구매가 완료</strong>되었습니다.<br>'
+        + '현재 대만 현지 창고에서 검수 및 포장 준비 중입니다.<br><br>'
+        + '국제배송비 안내는 포장 완료 후 별도로 안내드리겠습니다. 감사합니다 😊';
+    }
+  },
+  'Delivered': {
+    icon: '📦',
+    title: '배송 완료 안내',
+    subject: '[대만iN] 배송이 완료되었습니다',
+    body: function(o) {
+      return '안녕하세요, <strong>'+o.buyerKo+'</strong>님!<br><br>'
+        + '주문하신 상품의 <strong style="color:#555;">배송이 완료</strong>되었습니다.<br>'
+        + '상품을 수령하신 후 이상이 있으시면 즉시 연락 주시기 바랍니다.<br><br>'
+        + '대만iN을 이용해 주셔서 감사합니다 🙏';
+    }
+  },
+  'Cancelled': {
+    icon: '❌',
+    title: '주문 취소 안내',
+    subject: '[대만iN] 주문이 취소되었습니다',
+    body: function(o) {
+      return '안녕하세요, <strong>'+o.buyerKo+'</strong>님!<br><br>'
+        + '주문하신 상품이 <strong style="color:#cc0000;">취소 처리</strong>되었습니다.<br>'
+        + '취소 관련 문의사항은 아래 이메일로 연락 주시기 바랍니다.<br><br>'
+        + '📧 <a href="mailto:taiwanin@naver.com" style="color:#1a4fa0;">taiwanin@naver.com</a><br><br>'
+        + '이용해 주셔서 감사합니다.';
+    }
+  }
+};
+
+function showStatusEmailConfirm(order, status) {
+  _statusEmailOrder = order;
+  _statusEmailStatus = status;
+  var info = STATUS_EMAIL_MAP[status];
+  if(!info) return;
+  document.getElementById('seModal_icon').textContent = info.icon;
+  document.getElementById('seModal_title').textContent = info.title;
+  document.getElementById('seModal_email').textContent = order.email;
+  document.getElementById('seModal_name').textContent = order.buyerKo || order.buyer;
+  document.getElementById('seModal_id').textContent = order.id;
+  var modal = document.getElementById('statusEmailModal');
+  modal.style.display = 'flex';
+}
+
+function closeStatusEmailModal() {
+  document.getElementById('statusEmailModal').style.display = 'none';
+  _statusEmailOrder = null;
+  _statusEmailStatus = null;
+}
+
+function sendStatusEmail() {
+  if(!_statusEmailOrder || !_statusEmailStatus) return;
+  if(!sheetsUrl) { showToast('⚠️ GAS URL이 설정되지 않았습니다.'); return; }
+  var o = _statusEmailOrder;
+  var info = STATUS_EMAIL_MAP[_statusEmailStatus];
+  var payload = {
+    action: 'statusUpdate',
+    email: o.email,
+    orderId: o.id,
+    buyerKo: o.buyerKo || o.buyer || '',
+    status: _statusEmailStatus,
+    statusKo: STATUS_MAP[_statusEmailStatus] ? STATUS_MAP[_statusEmailStatus].ko : _statusEmailStatus,
+    subject: info.subject,
+    bodyHtml: info.body(o)
+  };
+  closeStatusEmailModal();
+  document.getElementById('loadingOverlay').classList.add('show');
+  fetch(sheetsUrl, { method:'POST', mode:'no-cors', body: JSON.stringify(payload) })
+    .then(function() {
+      document.getElementById('loadingOverlay').classList.remove('show');
+      showToast('📧 상태 변경 이메일을 발송했습니다!');
+    })
+    .catch(function() {
+      document.getElementById('loadingOverlay').classList.remove('show');
+      showToast('⚠️ 발송 중 오류가 발생했습니다.');
     });
 }
 
