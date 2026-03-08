@@ -1192,7 +1192,7 @@ textarea.fi{resize:vertical;min-height:82px;line-height:1.6;}
       <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px;">💰 배송비 산정 <span style="color:var(--red);font-weight:400;">*필수</span></div>
       <div style="margin-bottom:10px;">
         <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">국제배송비 (원) — 직접 입력</label>
-        <input id="sm_baseFee" type="number" placeholder="예) 19861" oninput="calcShippingTotal()"
+        <input id="sm_baseFee" type="number" placeholder="예) 19861" oninput="this.value=this.value.replace(/[^0-9]/g,'');calcShippingTotal()" onblur="if(this.value)this.value=parseInt(this.value).toLocaleString('ko-KR')" onfocus="this.value=this.value.replace(/,/g,'')"
           style="width:100%;border:1.5px solid var(--border);border-radius:7px;padding:9px 10px;font-size:14px;box-sizing:border-box;">
       </div>
       <div style="border-top:1px dashed var(--border);padding-top:10px;">
@@ -2001,7 +2001,10 @@ function renderTable(){
     tr.appendChild(td('<strong>'+o.buyer+'</strong>'));
     tr.appendChild(td(o.phone));
     tr.appendChild(td(o.products.length+'건','text-align:center;'));
-    tr.appendChild(td(o.shipping,'font-size:11px;'));
+    var shipKoStr = shipKo(o.shipping);
+    var shipColor = o.shipping==='Express Shipping'?'#c17d00':o.shipping==='EMS'?'#1a6b3a':'#1a3a6b';
+    var shipBg = o.shipping==='Express Shipping'?'#fff8e1':o.shipping==='EMS'?'#e8fff0':'#e8f0ff';
+    tr.appendChild(td('<span style="background:'+shipBg+';color:'+shipColor+';font-weight:700;font-size:11px;padding:3px 8px;border-radius:20px;white-space:nowrap;">'+shipKoStr+'</span>'));
     tr.appendChild(td('<strong style="color:var(--navy);">'+o.estTotal+'</strong>'));
     // 입금액 입력
     var paid=document.createElement('input');
@@ -2623,7 +2626,7 @@ function openShippingModal(o) {
     '<strong>' + (o.recvKo||o.recv) + '</strong> / ' + (o.recvEn||'') + '<br>' +
     '<span style="font-size:11px;color:#555;">🏠 ' + (o.addrKo||'') + ' [' + (o.zip||'') + ']</span><br>' +
     '<span style="font-size:11px;color:#888;">🌐 ' + (o.addrEn||'') + '</span><br>' +
-    '📱 ' + (o.rphone||'') + ' &nbsp;|&nbsp; ✈️ ' + (o.shipping||'') +
+    '📱 ' + (o.rphone||'') + ' &nbsp;|&nbsp; ✈️ ' + shipKo(o.shipping||'') +
     bizLine + receiptLine;
   ['sm_notice','sm_size','sm_weight','sm_specialNote','sm_shippingFee','sm_baseFee'].forEach(function(id){
     document.getElementById(id).value = '';
@@ -2741,6 +2744,8 @@ function openShipConfirmModal() {
   // 모달 display 설정 (flex로)
   var modal = document.getElementById('shipConfirmModal');
   modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
   // 스크롤 초기화
   setTimeout(function(){
     var body = document.getElementById('sc_scrollBody');
@@ -2964,6 +2969,8 @@ function sendStatusEmail() {
       showToast('⚠️ 발송 중 오류가 발생했습니다.');
     });
 }
+
+function shipKo(s){var m={"Standard Shipping":"일반배송","Express Shipping":"특송배송","EMS":"EMS배송"};return m[s]||s;}
 
 function calcShippingTotal() {
   var base = parseInt(document.getElementById('sm_baseFee').value.replace(/[^0-9]/g,'')) || 0;
