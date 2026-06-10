@@ -26,9 +26,11 @@ const refs = {
   convertAddressButton: document.querySelector("#convertAddressButton"),
   addressStatus: document.querySelector("#addressStatus"),
   postcodeLayer: document.querySelector("#postcodeLayer"),
+  sellerCount: document.querySelector("#sellerCount"),
   memo: document.querySelector("#memo"),
   productTotal: document.querySelector("#productTotal"),
   domesticTotal: document.querySelector("#domesticTotal"),
+  purchaseBaseTotal: document.querySelector("#purchaseBaseTotal"),
   serviceFee: document.querySelector("#serviceFee"),
   grandTotal: document.querySelector("#grandTotal"),
   quoteNote: document.querySelector("#quoteNote"),
@@ -42,7 +44,9 @@ const refs = {
   damageWaiverCheck: document.querySelector("#damageWaiverCheck"),
   agreementCheck: document.querySelector("#agreementCheck"),
   cashReceiptCheck: document.querySelector("#cashReceiptCheck"),
+  cashReceiptFields: document.querySelector("#cashReceiptFields"),
   cashReceiptPhone: document.querySelector("#cashReceiptPhone"),
+  sameCashReceiptButton: document.querySelector("#sameCashReceiptButton"),
   taxInvoiceCheck: document.querySelector("#taxInvoiceCheck"),
   taxInvoiceFields: document.querySelector("#taxInvoiceFields"),
   taxBusinessNumber: document.querySelector("#taxBusinessNumber"),
@@ -50,16 +54,17 @@ const refs = {
   businessFileCount: document.querySelector("#businessFileCount"),
   privacyCheck: document.querySelector("#privacyCheck"),
   consignmentCheck: document.querySelector("#consignmentCheck"),
+  adminOpenButton: document.querySelector("#adminOpenButton"),
+  adminCloseButton: document.querySelector("#adminCloseButton"),
   adminLogin: document.querySelector("#adminLogin"),
   adminId: document.querySelector("#adminId"),
   adminPassword: document.querySelector("#adminPassword"),
   adminLoginButton: document.querySelector("#adminLoginButton"),
   adminLogoutButton: document.querySelector("#adminLogoutButton"),
+  adminModeLogoutButton: document.querySelector("#adminModeLogoutButton"),
   loginStatus: document.querySelector("#loginStatus"),
   adminPrivateSections: document.querySelectorAll(".admin-private"),
   adminExchangeRate: document.querySelector("#adminExchangeRate"),
-  adminServiceRate: document.querySelector("#adminServiceRate"),
-  adminMinimumFee: document.querySelector("#adminMinimumFee"),
   saveSettingsButton: document.querySelector("#saveSettingsButton"),
   settingsStatus: document.querySelector("#settingsStatus"),
   orderSummary: document.querySelector("#orderSummary"),
@@ -83,8 +88,6 @@ const refs = {
 
 const settings = {
   exchangeRate: 50,
-  serviceRate: 0.08,
-  minimumServiceFee: 5000,
   bankInfo: "국민 123456-00-789012 / 예금주: 대만iN",
 };
 
@@ -123,6 +126,30 @@ function selectedShippingType() {
 
 function selectedShippingRequests() {
   return Array.from(document.querySelectorAll(".shipping-request:checked")).map((input) => input.value);
+}
+
+function hasValue(input) {
+  return Boolean(input?.value?.trim());
+}
+
+function sellerCount() {
+  return Math.max(numberValue(refs.sellerCount, 1), 1);
+}
+
+function calculateServiceFee(purchaseBase, sellers) {
+  if (purchaseBase <= 0) return 0;
+  if (purchaseBase <= 100000) {
+    return 10000 + Math.max(sellers - 2, 0) * 4000;
+  }
+  return purchaseBase * (sellers >= 5 ? 0.12 : 0.1);
+}
+
+function serviceFeeRuleText(purchaseBase, sellers) {
+  if (purchaseBase <= 0) return "상품 정보를 입력하면 수수료가 자동 계산됩니다.";
+  if (purchaseBase <= 100000) {
+    return sellers >= 3 ? "10만 원 이하 기본 10,000원 + 판매처 추가 4,000원/건" : "10만 원 이하 기본 10,000원";
+  }
+  return sellers >= 5 ? "10만 원 이상 다건 기준 12%" : "10만 원 이상 10%";
 }
 
 function refreshBusinessCustomsNotice() {
@@ -258,19 +285,68 @@ function readItems() {
   });
 }
 
+function areItemsValid() {
+  return itemCards().every((card) => {
+    const name = card.querySelector(".item-name");
+    const url = card.querySelector(".item-url");
+    const price = card.querySelector(".item-price");
+    const quantity = card.querySelector(".item-qty");
+    return hasValue(name) && hasValue(url) && numberValue(price) > 0 && numberValue(quantity) >= 1;
+  });
+}
+
+function missingBasicRequirements() {
+  const missing = [];
+  if (!refs.noticeReadCheck.checked) missing.push("구매대행 유의사항 확인");
+  if (!refs.damageWaiverCheck.checked) missing.push("파손 면책 동의 확인");
+  if (!hasValue(refs.customerName) || !hasValue(refs.email) || !hasValue(refs.phone) || !hasValue(refs.customsCode)) {
+    missing.push("구매자 인적사항");
+  }
+  if (
+    !hasValue(refs.recipientNameKo) ||
+    !hasValue(refs.recipientNameEn) ||
+    !hasValue(refs.recipientPhone) ||
+    !hasValue(refs.recipientCustomsCode)
+  ) {
+    missing.push("수취인 및 통관정보");
+  }
+  if (!hasValue(refs.postalCode) || !hasValue(refs.addressKo) || !hasValue(refs.addressDetail) || !isAddressConverted) {
+    missing.push("주소 검색 및 영문주소 변환");
+  }
+  if (sellerCount() < 1) missing.push("판매처 수");
+  if (!areItemsValid()) missing.push("상품 정보");
+  return missing;
+}
+
+function missingOptionRequirements() {
+  const missing = [];
+  if (!selectedShippingType()) missing.push("배송유형 선택");
+  if (selectedShippingRequests().length === 0) missing.push("배송요청사항 선택");
+  if (refs.cashReceiptCheck.checked && !hasValue(refs.cashReceiptPhone)) missing.push("현금영수증 전화번호");
+  if (refs.taxInvoiceCheck.checked && !hasValue(refs.taxBusinessNumber)) missing.push("세금계산서 사업자등록번호");
+  if (!refs.privacyCheck.checked || !refs.consignmentCheck.checked || !refs.agreementCheck.checked) {
+    missing.push("개인정보 및 최종 동의");
+  }
+  return missing;
+}
+
 function calculateQuote() {
   const items = readItems();
   const productTotal = items.reduce((sum, item) => sum + item.krw, 0);
   const domesticTotal = items.reduce((sum, item) => sum + item.domesticKrw, 0);
-  const serviceFee = Math.max(productTotal * settings.serviceRate, settings.minimumServiceFee);
-  const grandTotal = productTotal + domesticTotal + serviceFee;
+  const purchaseBase = productTotal + domesticTotal;
+  const sellers = sellerCount();
+  const serviceFee = calculateServiceFee(purchaseBase, sellers);
+  const serviceFeeRule = serviceFeeRuleText(purchaseBase, sellers);
+  const grandTotal = purchaseBase + serviceFee;
 
-  latestQuote = { items, productTotal, domesticTotal, serviceFee, grandTotal };
+  latestQuote = { items, productTotal, domesticTotal, purchaseBase, sellers, serviceFee, serviceFeeRule, grandTotal };
   refs.productTotal.textContent = money(productTotal);
   refs.domesticTotal.textContent = money(domesticTotal);
+  refs.purchaseBaseTotal.textContent = money(purchaseBase);
   refs.serviceFee.textContent = money(serviceFee);
   refs.grandTotal.textContent = money(grandTotal);
-  refs.quoteNote.textContent = `현재 적용 환율: 1 NTD = ${settings.exchangeRate.toLocaleString("ko-KR")}원 / 국제배송비는 2차 결제입니다.`;
+  refs.quoteNote.textContent = `현재 적용 환율: 1 NTD = ${settings.exchangeRate.toLocaleString("ko-KR")}원 / 판매처 ${sellers}곳, ${serviceFeeRule} / 국제배송비는 2차 결제입니다.`;
   refs.settlementFirst.textContent = money(grandTotal);
   itemCards().forEach((card, index) => {
     const item = items[index];
@@ -300,6 +376,7 @@ function addItem(defaults = {}) {
   refs.itemsList.append(fragment);
   refreshItemTitles();
   calculateQuote();
+  refreshSubmitAvailability();
 }
 
 function renderOrderSummary() {
@@ -325,6 +402,8 @@ function renderOrderSummary() {
       <div><dt>통관 유형</dt><dd>${refs.customsType.options[refs.customsType.selectedIndex].text}</dd></div>
       <div><dt>수취인 연락처</dt><dd>${refs.recipientPhone.value || "미입력"}</dd></div>
       <div><dt>우편번호</dt><dd>${refs.postalCode.value || "미입력"}</dd></div>
+      <div><dt>판매처 수</dt><dd>${latestQuote.sellers}곳</dd></div>
+      <div><dt>수수료 기준</dt><dd>${latestQuote.serviceFeeRule}</dd></div>
       <div><dt>1차 예상금액</dt><dd>${money(latestQuote.grandTotal)}</dd></div>
       <div><dt>배송유형</dt><dd>${selectedShippingType() || "미선택"}</dd></div>
       <div><dt>배송요청</dt><dd>${selectedShippingRequests().join(", ") || "없음"}</dd></div>
@@ -348,8 +427,11 @@ function setAdminAccess(isAllowed) {
   });
   refs.adminLogoutButton.hidden = !isAllowed;
   refs.adminLoginButton.hidden = isAllowed;
+  refs.adminModeLogoutButton.hidden = !isAllowed;
+  refs.adminOpenButton.textContent = isAllowed ? "관리자 모드" : "관리자 로그인";
 
   if (isAllowed) {
+    refs.adminLogin.hidden = true;
     refs.loginStatus.textContent = "관리자 로그인 완료: 운영관리 화면이 열렸습니다.";
   } else {
     refs.loginStatus.textContent = "테스트 계정: admin / taiwanin1234";
@@ -362,6 +444,7 @@ function fillTemplate(template) {
     .replaceAll("{{customerName}}", refs.customerName.value || "고객")
     .replaceAll("{{grandTotal}}", money(latestQuote.grandTotal))
     .replaceAll("{{productTotal}}", money(latestQuote.productTotal))
+    .replaceAll("{{purchaseBase}}", money(latestQuote.purchaseBase))
     .replaceAll("{{serviceFee}}", money(latestQuote.serviceFee))
     .replaceAll("{{actualWeight}}", numberValue(refs.actualWeight).toLocaleString("ko-KR"))
     .replaceAll("{{internationalFee}}", money(internationalFee))
@@ -389,18 +472,16 @@ function logMail(type, subject, body) {
 }
 
 function refreshSubmitAvailability() {
-  const canSubmit =
-    refs.noticeReadCheck.checked &&
-    refs.damageWaiverCheck.checked &&
-    refs.agreementCheck.checked &&
-    refs.privacyCheck.checked &&
-    refs.consignmentCheck.checked &&
-    Boolean(selectedShippingType()) &&
-    isAddressConverted;
+  const basicMissing = missingBasicRequirements();
+  const optionMissing = missingOptionRequirements();
+  const canGoNext = basicMissing.length === 0;
+  const canSubmit = canGoNext && optionMissing.length === 0;
+  refs.nextStepButton.disabled = !canGoNext;
   refs.submitRequestButton.disabled = !canSubmit;
-  if (!canSubmit) {
-    refs.customerStatus.textContent =
-      "유의사항 확인, 영문주소 변환, 배송유형 선택, 개인정보 동의를 완료해야 신청서를 접수할 수 있습니다.";
+  if (!canGoNext) {
+    refs.customerStatus.textContent = `다음 단계로 이동하려면 ${basicMissing.join(", ")}을 완료해주세요.`;
+  } else if (!canSubmit) {
+    refs.customerStatus.textContent = `신청서 접수를 위해 ${optionMissing.join(", ")}을 완료해주세요.`;
   } else if (orderStatus === "신청 전") {
     refs.customerStatus.textContent = "신청서 접수 준비가 완료되었습니다.";
   }
@@ -436,6 +517,9 @@ function downloadCsv() {
       "세금계산서요청",
       "세금계산서사업자번호",
       "사업자등록증첨부수",
+      "판매처수",
+      "수수료산정기준금액",
+      "수수료규칙",
       "품목번호",
       "상품명",
       "상품URL",
@@ -479,6 +563,9 @@ function downloadCsv() {
       refs.taxInvoiceCheck.checked ? "Y" : "N",
       refs.taxBusinessNumber.value,
       refs.businessCertificateFiles.files.length,
+      latestQuote.sellers,
+      Math.round(latestQuote.purchaseBase),
+      latestQuote.serviceFeeRule,
       index + 1,
       item.name,
       item.url,
@@ -511,13 +598,7 @@ function downloadCsv() {
 }
 
 refs.addItemButton.addEventListener("click", () => {
-  addItem({
-    name: "추가 상품",
-    url: "https://example.tw/product/additional",
-    priceTwd: 800,
-    quantity: 1,
-    option: "옵션 입력",
-  });
+  addItem();
 });
 
 refs.itemsList.addEventListener("click", (event) => {
@@ -526,6 +607,7 @@ refs.itemsList.addEventListener("click", (event) => {
   event.target.closest(".item-card").remove();
   refreshItemTitles();
   calculateQuote();
+  refreshSubmitAvailability();
 });
 
 refs.itemsList.addEventListener("change", (event) => {
@@ -543,18 +625,43 @@ refs.itemsList.addEventListener("change", (event) => {
 
 refs.form.addEventListener("input", calculateQuote);
 refs.form.addEventListener("change", calculateQuote);
+refs.form.addEventListener("input", refreshSubmitAvailability);
+refs.form.addEventListener("change", refreshSubmitAvailability);
 
 refs.stepTabs.forEach((tab) => {
-  tab.addEventListener("click", () => showStep(tab.dataset.stepTarget));
+  tab.addEventListener("click", () => {
+    if (tab.dataset.stepTarget === "optionStep" && missingBasicRequirements().length > 0) {
+      refreshSubmitAvailability();
+      return;
+    }
+    showStep(tab.dataset.stepTarget);
+  });
 });
 
-refs.nextStepButton.addEventListener("click", () => showStep("optionStep"));
+refs.nextStepButton.addEventListener("click", () => {
+  if (missingBasicRequirements().length > 0) {
+    refreshSubmitAvailability();
+    return;
+  }
+  showStep("optionStep");
+});
 refs.prevStepButton.addEventListener("click", () => showStep("basicStep"));
 
 refs.customsType.addEventListener("change", refreshBusinessCustomsNotice);
 
+refs.cashReceiptCheck.addEventListener("change", () => {
+  refs.cashReceiptFields.hidden = !refs.cashReceiptCheck.checked;
+  refreshSubmitAvailability();
+});
+
+refs.sameCashReceiptButton.addEventListener("click", () => {
+  refs.cashReceiptPhone.value = refs.phone.value || refs.recipientPhone.value;
+  refreshSubmitAvailability();
+});
+
 refs.taxInvoiceCheck.addEventListener("change", () => {
   refs.taxInvoiceFields.hidden = !refs.taxInvoiceCheck.checked;
+  refreshSubmitAvailability();
 });
 
 refs.businessCertificateFiles.addEventListener("change", () => {
@@ -581,6 +688,7 @@ document.querySelectorAll(".shipping-request").forEach((input) => {
     if (input !== noneOption && input.checked) {
       noneOption.checked = false;
     }
+    refreshSubmitAvailability();
   });
 });
 
@@ -594,6 +702,7 @@ refs.sameBuyerButton.addEventListener("click", () => {
   refs.recipientPhone.value = refs.phone.value;
   refs.recipientCustomsCode.value = refs.customsCode.value;
   refs.customerStatus.textContent = "구매자 정보가 수취인 정보에 적용되었습니다.";
+  refreshSubmitAvailability();
 });
 
 refs.recipientNameKo.addEventListener("input", () => {
@@ -657,6 +766,19 @@ refs.damageWaiverScroll.addEventListener("scroll", () => {
   input.addEventListener("change", refreshSubmitAvailability);
 });
 
+refs.adminOpenButton.addEventListener("click", () => {
+  if (isAdminLoggedIn) {
+    document.querySelector("#admin").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  refs.adminLogin.hidden = false;
+  refs.adminId.focus();
+});
+
+refs.adminCloseButton.addEventListener("click", () => {
+  refs.adminLogin.hidden = true;
+});
+
 refs.adminLoginButton.addEventListener("click", () => {
   const id = refs.adminId.value.trim();
   const password = refs.adminPassword.value;
@@ -672,18 +794,20 @@ refs.adminLoginButton.addEventListener("click", () => {
   document.querySelector("#admin").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
-refs.adminLogoutButton.addEventListener("click", () => {
+function logoutAdmin() {
   refs.adminPassword.value = "";
   setAdminAccess(false);
-  document.querySelector("#adminLogin").scrollIntoView({ behavior: "smooth", block: "start" });
-});
+  refs.adminLogin.hidden = true;
+  document.querySelector("#top").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+refs.adminLogoutButton.addEventListener("click", logoutAdmin);
+refs.adminModeLogoutButton.addEventListener("click", logoutAdmin);
 
 refs.saveSettingsButton.addEventListener("click", () => {
   if (!isAdminLoggedIn) return;
   settings.exchangeRate = Math.max(numberValue(refs.adminExchangeRate, 50), 1);
-  settings.serviceRate = Math.max(numberValue(refs.adminServiceRate, 8), 0) / 100;
-  settings.minimumServiceFee = Math.max(numberValue(refs.adminMinimumFee, 5000), 0);
-  refs.settingsStatus.textContent = `설정 적용 완료: 환율 ${settings.exchangeRate.toLocaleString("ko-KR")}원, 수수료 ${Math.round(settings.serviceRate * 1000) / 10}%`;
+  refs.settingsStatus.textContent = `설정 적용 완료: 환율 ${settings.exchangeRate.toLocaleString("ko-KR")}원`;
   calculateQuote();
   renderOrderSummary();
 });

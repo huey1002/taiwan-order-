@@ -84,16 +84,26 @@ a {
   justify-content: flex-end;
 }
 
-.nav a {
+.nav a,
+.nav-admin-button {
+  background: transparent;
+  border: 0;
   border-radius: 6px;
   color: #3a4656;
+  cursor: pointer;
+  font: inherit;
   font-size: 14px;
   font-weight: 700;
   padding: 8px 10px;
 }
 
-.nav a:hover {
+.nav a:hover,
+.nav-admin-button:hover {
   background: #edf3f8;
+}
+
+.nav-admin-button {
+  color: var(--navy);
 }
 
 .hero {
@@ -146,9 +156,14 @@ p {
 }
 
 h1 {
-  font-size: clamp(39px, 6.5vw, 72px);
+  font-size: clamp(34px, 5.3vw, 68px);
   line-height: 1.06;
   margin-bottom: 20px;
+}
+
+.hero h1 {
+  font-size: clamp(34px, 4.4vw, 60px);
+  white-space: nowrap;
 }
 
 h2 {
@@ -196,6 +211,15 @@ h3 {
 .primary-button {
   background: var(--red);
   color: #fff;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.danger-button:disabled {
+  background: #e8edf3;
+  border-color: #d7e0ea;
+  color: #98a2b3;
+  cursor: not-allowed;
 }
 
 .secondary-button {
@@ -583,10 +607,20 @@ textarea:focus {
   outline: none;
 }
 
+input::placeholder,
+textarea::placeholder {
+  color: #a7b0bd;
+}
+
 .field-grid {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.required-mark {
+  color: var(--red);
+  font-weight: 900;
 }
 
 .field-with-button {
@@ -666,6 +700,10 @@ textarea:focus {
   margin: 8px 0 0;
 }
 
+.neutral-help {
+  color: var(--muted);
+}
+
 .image-upload {
   align-items: center;
   border: 1px solid #cdd7e2;
@@ -718,6 +756,49 @@ textarea:focus {
 
 .bulk-request {
   background: #fff;
+}
+
+.seller-fee-row {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e3eaf1;
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+}
+
+.seller-count-field {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.seller-count-field span {
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.seller-count-field input {
+  font-size: 15px;
+  font-weight: 900;
+  min-height: 38px;
+  padding: 0 10px;
+  text-align: center;
+  width: 72px;
+}
+
+.fee-rule-note {
+  color: var(--muted);
+  flex: 1 1 360px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .quote-column {
@@ -824,13 +905,27 @@ textarea:focus {
 }
 
 .admin-login-band {
-  margin: 0 auto;
-  max-width: 1180px;
-  padding: 10px 18px 46px;
+  align-items: start;
+  background: rgba(22, 49, 76, 0.38);
+  display: grid;
+  inset: 0;
+  justify-items: end;
+  padding: 76px clamp(18px, 4vw, 56px) 24px;
+  position: fixed;
+  z-index: 50;
 }
 
 .login-panel {
-  max-width: 760px;
+  max-width: 620px;
+  width: min(620px, 100%);
+}
+
+.modal-heading,
+.section-heading {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
 }
 
 .login-help {
@@ -1026,9 +1121,14 @@ textarea:focus {
     font-size: 36px;
   }
 
+  .hero h1 {
+    font-size: clamp(26px, 7.4vw, 36px);
+  }
+
   .field-grid,
   .item-form-row,
   .field-with-button,
+  .seller-fee-row,
   .order-summary dl {
     grid-template-columns: 1fr;
   }
