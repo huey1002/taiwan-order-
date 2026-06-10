@@ -341,11 +341,96 @@ form,
   gap: 16px;
 }
 
+.form-step-tabs {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.step-tab {
+  background: #f8fafc;
+  border: 1px solid #dfe7ef;
+  border-radius: 7px;
+  color: #475467;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  min-height: 46px;
+}
+
+.step-tab.is-active {
+  background: #eaf7f3;
+  border-color: #b5dfd4;
+  color: var(--green);
+}
+
+.form-step {
+  display: grid;
+  gap: 16px;
+}
+
+.step-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .subsection {
   border-top: 1px dashed #cdd7e2;
   display: grid;
   gap: 16px;
   padding-top: 18px;
+}
+
+.nested-fields {
+  background: #f8fafc;
+  border: 1px solid #dfe7ef;
+  border-radius: 8px;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.compact-notice {
+  background: #fff;
+  border: 1px solid #e1e8ef;
+  border-radius: 8px;
+}
+
+.option-list {
+  display: grid;
+  gap: 10px;
+}
+
+.choice-card {
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid #dfe7ef;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  gap: 4px 10px;
+  grid-template-columns: 20px 1fr;
+  padding: 14px;
+}
+
+.choice-card input {
+  height: 18px;
+  min-height: 18px;
+  margin-top: 2px;
+  padding: 0;
+  width: 18px;
+}
+
+.choice-card span {
+  color: var(--navy);
+  font-weight: 900;
+}
+
+.choice-card small {
+  color: var(--muted);
+  grid-column: 2;
+  line-height: 1.5;
 }
 
 .agreement-box {

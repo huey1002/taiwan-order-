@@ -1,5 +1,9 @@
 const refs = {
   form: document.querySelector("#orderForm"),
+  formSteps: document.querySelectorAll(".form-step"),
+  stepTabs: document.querySelectorAll(".step-tab"),
+  nextStepButton: document.querySelector("#nextStepButton"),
+  prevStepButton: document.querySelector("#prevStepButton"),
   itemsList: document.querySelector("#itemsList"),
   itemTemplate: document.querySelector("#itemTemplate"),
   addItemButton: document.querySelector("#addItemButton"),
@@ -12,6 +16,7 @@ const refs = {
   recipientNameEn: document.querySelector("#recipientNameEn"),
   recipientPhone: document.querySelector("#recipientPhone"),
   customsType: document.querySelector("#customsType"),
+  businessCustomsNotice: document.querySelector("#businessCustomsNotice"),
   recipientCustomsCode: document.querySelector("#recipientCustomsCode"),
   postcodeButton: document.querySelector("#postcodeButton"),
   postalCode: document.querySelector("#postalCode"),
@@ -36,6 +41,15 @@ const refs = {
   noticeReadCheck: document.querySelector("#noticeReadCheck"),
   damageWaiverCheck: document.querySelector("#damageWaiverCheck"),
   agreementCheck: document.querySelector("#agreementCheck"),
+  cashReceiptCheck: document.querySelector("#cashReceiptCheck"),
+  cashReceiptPhone: document.querySelector("#cashReceiptPhone"),
+  taxInvoiceCheck: document.querySelector("#taxInvoiceCheck"),
+  taxInvoiceFields: document.querySelector("#taxInvoiceFields"),
+  taxBusinessNumber: document.querySelector("#taxBusinessNumber"),
+  businessCertificateFiles: document.querySelector("#businessCertificateFiles"),
+  businessFileCount: document.querySelector("#businessFileCount"),
+  privacyCheck: document.querySelector("#privacyCheck"),
+  consignmentCheck: document.querySelector("#consignmentCheck"),
   adminLogin: document.querySelector("#adminLogin"),
   adminId: document.querySelector("#adminId"),
   adminPassword: document.querySelector("#adminPassword"),
@@ -80,6 +94,7 @@ let mailCount = 0;
 let isAdminLoggedIn = false;
 let isAddressConverted = false;
 let selectedAddressEnglish = "";
+let currentStep = "basicStep";
 
 function money(value) {
   return `${Math.round(value).toLocaleString("ko-KR")}원`;
@@ -88,6 +103,31 @@ function money(value) {
 function numberValue(input, fallback = 0) {
   const value = Number(input.value);
   return Number.isFinite(value) ? value : fallback;
+}
+
+function showStep(stepId) {
+  currentStep = stepId;
+  refs.formSteps.forEach((step) => {
+    step.hidden = step.id !== stepId;
+    step.classList.toggle("is-active", step.id === stepId);
+  });
+  refs.stepTabs.forEach((tab) => {
+    tab.classList.toggle("is-active", tab.dataset.stepTarget === stepId);
+  });
+  refs.form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function selectedShippingType() {
+  return document.querySelector('input[name="shippingType"]:checked')?.value || "";
+}
+
+function selectedShippingRequests() {
+  return Array.from(document.querySelectorAll(".shipping-request:checked")).map((input) => input.value);
+}
+
+function refreshBusinessCustomsNotice() {
+  const isBusiness = refs.customsType.value === "business";
+  refs.businessCustomsNotice.hidden = !isBusiness;
 }
 
 function romanizeKoreanName(name) {
@@ -286,6 +326,10 @@ function renderOrderSummary() {
       <div><dt>수취인 연락처</dt><dd>${refs.recipientPhone.value || "미입력"}</dd></div>
       <div><dt>우편번호</dt><dd>${refs.postalCode.value || "미입력"}</dd></div>
       <div><dt>1차 예상금액</dt><dd>${money(latestQuote.grandTotal)}</dd></div>
+      <div><dt>배송유형</dt><dd>${selectedShippingType() || "미선택"}</dd></div>
+      <div><dt>배송요청</dt><dd>${selectedShippingRequests().join(", ") || "없음"}</dd></div>
+      <div><dt>현금영수증</dt><dd>${refs.cashReceiptCheck.checked ? refs.cashReceiptPhone.value || "요청" : "미요청"}</dd></div>
+      <div><dt>세금계산서</dt><dd>${refs.taxInvoiceCheck.checked ? refs.taxBusinessNumber.value || "요청" : "미요청"}</dd></div>
       <div><dt>요청사항</dt><dd>${refs.memo.value || "없음"}</dd></div>
     </dl>
     <ul>${itemRows}</ul>
@@ -349,10 +393,14 @@ function refreshSubmitAvailability() {
     refs.noticeReadCheck.checked &&
     refs.damageWaiverCheck.checked &&
     refs.agreementCheck.checked &&
+    refs.privacyCheck.checked &&
+    refs.consignmentCheck.checked &&
+    Boolean(selectedShippingType()) &&
     isAddressConverted;
   refs.submitRequestButton.disabled = !canSubmit;
   if (!canSubmit) {
-    refs.customerStatus.textContent = "유의사항 확인, 파손 면책 동의, 영문주소 변환을 완료해야 신청서를 접수할 수 있습니다.";
+    refs.customerStatus.textContent =
+      "유의사항 확인, 영문주소 변환, 배송유형 선택, 개인정보 동의를 완료해야 신청서를 접수할 수 있습니다.";
   } else if (orderStatus === "신청 전") {
     refs.customerStatus.textContent = "신청서 접수 준비가 완료되었습니다.";
   }
@@ -381,6 +429,13 @@ function downloadCsv() {
       "한국주소",
       "상세주소",
       "영문주소",
+      "배송유형",
+      "배송요청사항",
+      "현금영수증요청",
+      "현금영수증전화번호",
+      "세금계산서요청",
+      "세금계산서사업자번호",
+      "사업자등록증첨부수",
       "품목번호",
       "상품명",
       "상품URL",
@@ -417,6 +472,13 @@ function downloadCsv() {
       refs.addressKo.value,
       refs.addressDetail.value,
       refs.addressEn.value,
+      selectedShippingType(),
+      selectedShippingRequests().join(" / "),
+      refs.cashReceiptCheck.checked ? "Y" : "N",
+      refs.cashReceiptPhone.value,
+      refs.taxInvoiceCheck.checked ? "Y" : "N",
+      refs.taxBusinessNumber.value,
+      refs.businessCertificateFiles.files.length,
       index + 1,
       item.name,
       item.url,
@@ -481,6 +543,50 @@ refs.itemsList.addEventListener("change", (event) => {
 
 refs.form.addEventListener("input", calculateQuote);
 refs.form.addEventListener("change", calculateQuote);
+
+refs.stepTabs.forEach((tab) => {
+  tab.addEventListener("click", () => showStep(tab.dataset.stepTarget));
+});
+
+refs.nextStepButton.addEventListener("click", () => showStep("optionStep"));
+refs.prevStepButton.addEventListener("click", () => showStep("basicStep"));
+
+refs.customsType.addEventListener("change", refreshBusinessCustomsNotice);
+
+refs.taxInvoiceCheck.addEventListener("change", () => {
+  refs.taxInvoiceFields.hidden = !refs.taxInvoiceCheck.checked;
+});
+
+refs.businessCertificateFiles.addEventListener("change", () => {
+  if (refs.businessCertificateFiles.files.length > 3) {
+    refs.businessCertificateFiles.value = "";
+    refs.businessFileCount.textContent = "파일은 최대 3개까지 첨부할 수 있습니다.";
+    return;
+  }
+  refs.businessFileCount.textContent = `${refs.businessCertificateFiles.files.length}/3개 첨부됨`;
+});
+
+document.querySelectorAll('input[name="shippingType"]').forEach((input) => {
+  input.addEventListener("change", refreshSubmitAvailability);
+});
+
+document.querySelectorAll(".shipping-request").forEach((input) => {
+  input.addEventListener("change", () => {
+    const noneOption = document.querySelector('.shipping-request[value="배송요청사항 없음"]');
+    if (input === noneOption && input.checked) {
+      document.querySelectorAll(".shipping-request").forEach((other) => {
+        if (other !== noneOption) other.checked = false;
+      });
+    }
+    if (input !== noneOption && input.checked) {
+      noneOption.checked = false;
+    }
+  });
+});
+
+[refs.privacyCheck, refs.consignmentCheck].forEach((input) => {
+  input.addEventListener("change", refreshSubmitAvailability);
+});
 
 refs.sameBuyerButton.addEventListener("click", () => {
   refs.recipientNameKo.value = refs.customerName.value;
@@ -624,4 +730,5 @@ refs.sendShippingButton.addEventListener("click", () => {
 addItem();
 setStatus(orderStatus);
 setAdminAccess(false);
+refreshBusinessCustomsNotice();
 refreshSubmitAvailability();

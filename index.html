@@ -85,6 +85,12 @@
           </div>
 
           <form id="orderForm">
+            <div class="form-step-tabs" aria-label="신청서 작성 단계">
+              <button class="step-tab is-active" type="button" data-step-target="basicStep">1. 기본정보</button>
+              <button class="step-tab" type="button" data-step-target="optionStep">2. 배송·증빙·동의</button>
+            </div>
+
+            <div class="form-step is-active" id="basicStep">
             <section class="agreement-box" aria-label="구매대행 신청 전 유의사항">
               <div class="agreement-summary">
                 <strong>구매대행 신청 전 꼭 확인해주세요.</strong>
@@ -219,6 +225,10 @@
                   </select>
                 </label>
               </div>
+              <p class="status-text" id="businessCustomsNotice" hidden>
+                사업자통관 경우 통관시 관세사의 별도 안내가 이뤄지며 통관에 따른 수수료 및 기타사항은
+                추후 해당 관세사를 통해 안내될 예정입니다. 이 점 참고 부탁드립니다.
+              </p>
               <div class="field-grid">
                 <label>
                   개인통관고유번호 / 사업자등록번호
@@ -234,6 +244,13 @@
                   </button>
                 </div>
               </div>
+              <p class="item-help">
+                빠른 통관을 위해서는 수취인의 개인통관고유부호가 반드시 필요합니다.
+                <a href="https://unipass.customs.go.kr/csp/persIndex.do" target="_blank" rel="noreferrer">
+                  유니패스 개인통관고유부호 발급
+                </a>
+                에서 휴대폰 인증으로 발급 가능합니다. 수취인이 외국인일 경우 여권번호 또는 외국인등록번호를 알려주세요.
+              </p>
               <label>
                 한국 주소
                 <textarea id="addressKo" rows="3" readonly></textarea>
@@ -279,15 +296,138 @@
               </div>
             </details>
 
-            <label>
-              요청사항
-              <textarea id="memo" rows="4">가격 확인 후 구매 가능 여부 안내 부탁드립니다.</textarea>
-            </label>
+            <div class="step-actions">
+              <button class="primary-button" type="button" id="nextStepButton">다음 단계</button>
+            </div>
+            </div>
 
-            <label class="checkbox-label">
-              <input id="agreementCheck" type="checkbox" />
-              <span>구매대행 유의사항, 통관/파손/교환 제한 안내, 파손 면책 동의 필요사항을 모두 확인했습니다.</span>
-            </label>
+            <div class="form-step" id="optionStep" hidden>
+              <section class="subsection">
+                <div class="items-header">
+                  <div>
+                    <p class="eyebrow">Payment evidence</p>
+                    <h3>현금영수증 및 세금계산서</h3>
+                  </div>
+                </div>
+                <div class="notice-list compact-notice">
+                  <p>카드결제는 불가하며, 세금계산서 발행은 가능합니다. 세금계산서는 부가세 별도입니다.</p>
+                  <p>구매대행 수수료에 대해서는 현금영수증 발행이 가능합니다. 단, 상품가를 포함한 전체 금액으로 현금영수증 발행을 요청하는 경우 부가세 10%가 별도 발생합니다.</p>
+                </div>
+                <label class="checkbox-label">
+                  <input id="cashReceiptCheck" type="checkbox" />
+                  <span>현금영수증 발행을 요청합니다.</span>
+                </label>
+                <label>
+                  현금영수증 발행 전화번호
+                  <input id="cashReceiptPhone" type="tel" value="" placeholder="예: 010-0000-0000" />
+                </label>
+                <label class="checkbox-label">
+                  <input id="taxInvoiceCheck" type="checkbox" />
+                  <span>세금계산서 발행을 요청합니다.</span>
+                </label>
+                <div id="taxInvoiceFields" class="nested-fields" hidden>
+                  <label>
+                    사업자등록번호
+                    <input id="taxBusinessNumber" type="text" value="" placeholder="사업자등록번호를 입력해주세요." />
+                  </label>
+                  <label>
+                    사업자등록증 사본 첨부
+                    <input id="businessCertificateFiles" type="file" accept="image/png,image/jpeg,image/gif,application/pdf" multiple />
+                  </label>
+                  <p class="item-help" id="businessFileCount">사진 또는 PDF 파일을 최대 3개까지 첨부할 수 있습니다.</p>
+                </div>
+              </section>
+
+              <section class="subsection">
+                <div class="items-header">
+                  <div>
+                    <p class="eyebrow">Shipping</p>
+                    <h3>배송 유형 선택</h3>
+                  </div>
+                </div>
+                <p class="item-help">
+                  아래 페이지에서 국제배송비 및 수수료를 확인 후 선택해주세요.
+                  <a href="https://www.taiwanin.kr/shippingfee" target="_blank" rel="noreferrer">배송요금 안내 보기</a>
+                </p>
+                <div class="option-list" id="shippingTypeGroup">
+                  <label class="choice-card">
+                    <input type="radio" name="shippingType" value="일반배송" />
+                    <span>일반배송</span>
+                    <small>영업일 기준 발송 후 약 7~14일 소요</small>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="shippingType" value="특송배송" />
+                    <span>특송배송</span>
+                    <small>영업일 기준 발송 후 약 4~7일 소요</small>
+                  </label>
+                  <label class="choice-card">
+                    <input type="radio" name="shippingType" value="EMS배송" />
+                    <span>EMS배송</span>
+                    <small>영업일 기준 발송 후 약 3~5일 소요</small>
+                  </label>
+                </div>
+              </section>
+
+              <section class="subsection">
+                <div class="items-header">
+                  <div>
+                    <p class="eyebrow">Inspection requests</p>
+                    <h3>배송 요청사항</h3>
+                  </div>
+                </div>
+                <div class="notice-list compact-notice">
+                  <p>반드시 신청서 접수 시 요청해주셔야 합니다. 상품 도착 후에는 신청이 불가합니다.</p>
+                  <p>정밀검수는 상황에 따라 불가할 수 있으며, 이 경우 기본검수 + 사진요청으로 적용됩니다. 정밀검수 시 개봉이 이뤄질 수 있고 개봉실이 제거되거나 훼손될 수 있습니다.</p>
+                  <p>미개봉 요청 시 외부 상태만 기본 검수하며, 내부 개봉·정밀 확인은 진행되지 않습니다. 오배송·스크래치·하자 등 상품 상태 문제는 책임드리기 어렵습니다.</p>
+                </div>
+                <div class="option-list">
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="배송요청사항 없음" /> <span>배송요청사항 없음</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="미개봉 요청" /> <span>미개봉 요청: 내부 개봉·정밀검수 없이 외부만 확인합니다.</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="정밀검수" /> <span>정밀검수: 3,000원 / 추가 1,000원/건 (스마트폰 정밀검수 제외)</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="포장보완" /> <span>포장보완: 2,000원 (완충재 보완 / 박스 교체 제외)</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="재포장" /> <span>재포장: 2,000원 (보완 없이 박스 추가 또는 교체 및 묶음재포장)</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="재포장보완" /> <span>재포장보완: 3,000원 (재포장+포장보완)</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="묶음배송" /> <span>묶음배송: 무료 (3오더까지 무료, 한 오더 추가 시 2,000원)</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="나눔배송" /> <span>나눔배송: 분할 발송 시 규격 박스가 없으면 별도 박스가 추가되며 재포장으로 적용됩니다.</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="추가사진요청" /> <span>추가사진요청: 1,000원/건. 기본 사진 외 추가 확인은 사전 요청이 필요합니다.</span></label>
+                  <label class="checkbox-label"><input class="shipping-request" type="checkbox" value="사업자 통관" /> <span>사업자 통관: 사업자등록증 사본 회신 및 추가 자료가 필요할 수 있습니다.</span></label>
+                </div>
+              </section>
+
+              <section class="subsection">
+                <label>
+                  추가 고객 별도 요청사항
+                  <textarea id="memo" rows="4" placeholder="구매대행 시 추가적인 요청사항이 있으시면 남겨주세요.">가격 확인 후 구매 가능 여부 안내 부탁드립니다.</textarea>
+                </label>
+                <p class="item-help">배송메시지는 국제배송에 적용이 어렵습니다. 이 점 참고 부탁드립니다.</p>
+              </section>
+
+              <section class="subsection">
+                <h3>개인정보 동의</h3>
+                <div class="notice-list compact-notice">
+                  <p>상품 주문 및 배송을 위해 위에 입력된 개인정보를 수집합니다. 수집한 개인정보는 이외의 목적으로는 사용하지 않으며, 상품 배송 완료 즉시 파기합니다. 개인정보 수집 및 이용에 대한 동의를 거부할 수 있으며, 이 경우 상품 주문이 어려울 수 있습니다.</p>
+                </div>
+                <label class="checkbox-label">
+                  <input id="privacyCheck" type="checkbox" />
+                  <span>개인정보 수집 및 이용에 동의합니다.</span>
+                </label>
+                <div class="notice-list compact-notice">
+                  <p>상품 배송을 위하여 대만iN에 고객님의 개인정보를 취급위탁합니다. 위탁하는 개인정보는 이외의 목적으로는 사용하지 않으며 배송 완료 즉시 파기합니다.</p>
+                </div>
+                <label class="checkbox-label">
+                  <input id="consignmentCheck" type="checkbox" />
+                  <span>개인정보 취급 및 위탁에 동의합니다.</span>
+                </label>
+                <label class="checkbox-label">
+                  <input id="agreementCheck" type="checkbox" />
+                  <span>구매대행 유의사항, 통관/파손/교환 제한 안내, 파손 면책 동의 필요사항을 모두 확인했습니다.</span>
+                </label>
+              </section>
+
+              <div class="step-actions">
+                <button class="secondary-button" type="button" id="prevStepButton">이전 단계</button>
+              </div>
+            </div>
           </form>
         </div>
 
